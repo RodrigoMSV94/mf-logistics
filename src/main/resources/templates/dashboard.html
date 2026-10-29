@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | MF Logistica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#fdf9f4] text-[#31302d] min-h-screen">
+<div class="mx-auto max-w-7xl px-6 py-8">
+    <header class="flex items-center justify-between mb-8">
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#e44b7c]">Terminal Administrativo</p>
+            <h1 class="text-3xl font-bold text-black mt-2">Modulo de Facturacion</h1>
+        </div>
+        <form method="post" th:action="@{/logout}">
+            <button type="submit" class="rounded-lg border border-black/20 px-4 py-2 text-sm font-semibold">Cerrar sesion</button>
+        </form>
+    </header>
+
+    <div th:if="${successMessage}" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800" th:text="${successMessage}"></div>
+
+    <div class="grid gap-8 lg:grid-cols-[2fr_1fr]">
+        <section class="rounded-2xl border border-black/10 bg-white p-6">
+            <h2 class="text-xl font-bold text-black">Nueva factura</h2>
+            <p class="mt-2 text-sm text-black/70">Completa los datos del cliente, servicio e importes.</p>
+
+            <form class="mt-6 grid gap-4" th:action="@{/dashboard/invoices}" th:object="${invoiceRequest}" method="post">
+                <div>
+                    <label class="text-sm font-semibold">Razon social / Cliente</label>
+                    <input type="text" th:field="*{clientName}" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2">
+                    <p th:if="${#fields.hasErrors('clientName')}" th:errors="*{clientName}" class="text-xs text-red-600 mt-1"></p>
+                </div>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                        <label class="text-sm font-semibold">NIF/CIF</label>
+                        <input type="text" th:field="*{clientNif}" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2">
+                        <p th:if="${#fields.hasErrors('clientNif')}" th:errors="*{clientNif}" class="text-xs text-red-600 mt-1"></p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-semibold">Direccion</label>
+                        <input type="text" th:field="*{clientAddress}" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-sm font-semibold">Concepto</label>
+                    <textarea th:field="*{concept}" rows="3" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2"></textarea>
+                    <p th:if="${#fields.hasErrors('concept')}" th:errors="*{concept}" class="text-xs text-red-600 mt-1"></p>
+                </div>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                        <label class="text-sm font-semibold">Base imponible (EUR)</label>
+                        <input type="number" step="0.01" min="0" th:field="*{subtotal}" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2">
+                        <p th:if="${#fields.hasErrors('subtotal')}" th:errors="*{subtotal}" class="text-xs text-red-600 mt-1"></p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-semibold">IVA (%)</label>
+                        <select th:field="*{taxRate}" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2">
+                            <option value="21">21</option>
+                            <option value="10">10</option>
+                            <option value="0">0</option>
+                        </select>
+                        <p th:if="${#fields.hasErrors('taxRate')}" th:errors="*{taxRate}" class="text-xs text-red-600 mt-1"></p>
+                    </div>
+                </div>
+
+                <button type="submit" class="mt-2 rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white">
+                    Generar factura y descargar PDF
+                </button>
+            </form>
+        </section>
+
+        <aside class="space-y-4">
+            <section class="rounded-2xl border border-black/10 bg-white p-5">
+                <h3 class="text-lg font-bold text-black">Ultimas emitidas</h3>
+                <div class="mt-4 space-y-3">
+                    <article th:if="${#lists.isEmpty(recentInvoices)}" class="text-sm text-black/70">Aun no hay facturas emitidas.</article>
+                    <article th:each="invoice : ${recentInvoices}" class="rounded-lg border border-black/10 p-3">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-[#e44b7c]" th:text="${invoice.invoiceNumber}">FAC-2026-0001</p>
+                        <p class="mt-1 text-sm font-semibold" th:text="${invoice.clientName}">Cliente</p>
+                        <p class="text-sm" th:text="${invoice.totalAmount + ' EUR'}">0.00 EUR</p>
+                        <a th:href="@{/dashboard/invoices/{id}/pdf(id=${invoice.id})}" class="mt-2 inline-block text-sm font-semibold text-black underline">
+                            Descargar PDF
+                        </a>
+                    </article>
+                </div>
+            </section>
+        </aside>
+    </div>
+</div>
+</body>
+</html>
+

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso interno | MF Logistica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#fdf9f4] min-h-screen flex items-center justify-center px-6">
+<div class="w-full max-w-md rounded-2xl border border-black/10 bg-white p-8 shadow-sm">
+    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#e44b7c]">Acceso exclusivo socios</p>
+    <h1 class="mt-3 text-3xl font-bold text-black">Portal de Gestion Interna</h1>
+    <p class="mt-2 text-sm text-black/70">Inicia sesion para administrar facturacion y documentos.</p>
+
+    <div th:if="${param.error}" class="mt-4 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+        Usuario o contrasena incorrectos.
+    </div>
+    <div th:if="${param.logout}" class="mt-4 rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-700">
+        Sesion cerrada correctamente.
+    </div>
+
+    <form class="mt-6 space-y-4" method="post" th:action="@{/login}">
+        <div>
+            <label for="username" class="text-sm font-semibold text-black">Email</label>
+            <input id="username" name="username" type="email" required
+                   class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2 focus:border-black focus:outline-none"
+                   placeholder="admin@mflogistica.es">
+        </div>
+        <div>
+            <label for="password" class="text-sm font-semibold text-black">Contrasena</label>
+            <input id="password" name="password" type="password" required
+                   class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2 focus:border-black focus:outline-none"
+                   placeholder="********">
+        </div>
+        <label class="flex items-center gap-2 text-sm text-black/70">
+            <input type="checkbox" name="remember-me" class="h-4 w-4 rounded border-black/20">
+            Recordar sesion en este dispositivo
+        </label>
+        <button type="submit" class="w-full rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white">
+            Ingresar al portal
+        </button>
+    </form>
+</div>
+</body>
+</html>
+
