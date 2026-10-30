@@ -4,9 +4,11 @@ import com.mflogistica.application.dto.InvoiceLineRequestDto;
 import com.mflogistica.application.dto.InvoicePdfDto;
 import com.mflogistica.application.dto.InvoiceRequestDto;
 import com.mflogistica.application.dto.InvoiceResponseDto;
+import com.mflogistica.application.dto.InvoicePageDto;
 import com.mflogistica.application.port.InvoiceRepositoryPort;
 import com.mflogistica.application.port.PdfGeneratorPort;
 import com.mflogistica.domain.exception.BusinessException;
+import com.mflogistica.domain.exception.DuplicateInvoiceNumberException;
 import com.mflogistica.domain.model.Invoice;
 import com.mflogistica.domain.model.InvoiceLine;
 import org.springframework.stereotype.Service;
@@ -25,17 +27,46 @@ public class InvoiceService {
     private static final BigDecimal IRPF_RATE = new BigDecimal("1.00");
     private final InvoiceRepositoryPort invoiceRepositoryPort;
     private final PdfGeneratorPort pdfGeneratorPort;
+    private final ClientService clientService;
 
-    public InvoiceService(InvoiceRepositoryPort invoiceRepositoryPort, PdfGeneratorPort pdfGeneratorPort) {
+    public InvoiceService(InvoiceRepositoryPort invoiceRepositoryPort, PdfGeneratorPort pdfGeneratorPort,
+                          ClientService clientService) {
         this.invoiceRepositoryPort = invoiceRepositoryPort;
         this.pdfGeneratorPort = pdfGeneratorPort;
+        this.clientService = clientService;
     }
 
     @Transactional
     public InvoiceResponseDto createInvoice(InvoiceRequestDto request) {
+        return saveInvoice(request);
+    }
+
+    @Transactional
+    public void resetLocalDevelopmentInvoices() {
+        invoiceRepositoryPort.deleteAll();
+        clientService.resetToDefaultClient();
+        LocalDate today = LocalDate.now();
+        InvoiceRequestDto sampleInvoice = new InvoiceRequestDto(
+                "FAC-" + today.getYear() + "-0001",
+                today,
+                "SAÚL GUERRERO LÓPEZ",
+                "73025558Y",
+                "Contrato Logístico Operativo\nCarrer Comanegra, 3\n17252 Calonge (Girona, España)",
+                List.of(new InvoiceLineRequestDto("Servicio de reparto", BigDecimal.ONE, new BigDecimal("100.00")))
+        );
+        saveInvoice(sampleInvoice);
+    }
+
+    @Transactional
+    public InvoiceResponseDto saveInvoice(InvoiceRequestDto request) {
         String invoiceNumber = request.invoiceNumber().trim();
-        if (invoiceRepositoryPort.existsByInvoiceNumber(invoiceNumber)) {
-            throw new BusinessException("Ya existe una factura con el número " + invoiceNumber);
+        if (request.invoiceId() != null) {
+            findInvoice(request.invoiceId());
+        }
+        if ((request.invoiceId() == null && invoiceRepositoryPort.existsByInvoiceNumber(invoiceNumber))
+                || (request.invoiceId() != null
+                && invoiceRepositoryPort.existsByInvoiceNumberAndIdNot(invoiceNumber, request.invoiceId()))) {
+            throw new DuplicateInvoiceNumberException("Ya existe una factura con el número " + invoiceNumber);
         }
 
         List<InvoiceLine> lines = request.lines().stream().map(this::toLine).toList();
@@ -46,9 +77,10 @@ public class InvoiceService {
                 .negate();
         BigDecimal totalAmount = subtotal.add(taxAmount).add(totalRetentions).setScale(2, RoundingMode.HALF_UP);
 
-        Invoice saved = invoiceRepositoryPort.save(new Invoice(null, invoiceNumber,
+        Invoice saved = invoiceRepositoryPort.save(new Invoice(request.invoiceId(), invoiceNumber,
                 request.clientName().trim(), request.clientNif().trim(), trimOrEmpty(request.clientAddress()),
                 request.issueDate(), subtotal, VAT_RATE, taxAmount, IRPF_RATE, totalRetentions, totalAmount, lines));
+        clientService.saveFromInvoice(saved.clientName(), saved.clientNif(), saved.clientAddress());
         return toResponse(saved);
     }
 
@@ -70,13 +102,53 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
+    public InvoicePageDto searchInvoices(String term, LocalDate from, LocalDate to, int page, int size) {
+        String normalizedTerm = term == null || term.isBlank() ? null : term.trim();
+        var result = invoiceRepositoryPort.search(normalizedTerm, from, to, page, size);
+        return new InvoicePageDto(result.invoices().stream().map(this::toResponse).toList(),
+                result.totalElements(), page, size);
+    }
+
+    @Transactional(readOnly = true)
     public InvoiceResponseDto findById(Long id) {
         return toResponse(findInvoice(id));
     }
 
     @Transactional(readOnly = true)
+    public InvoiceRequestDto findForEdit(Long id) {
+        Invoice invoice = findInvoice(id);
+        InvoiceRequestDto request = new InvoiceRequestDto(invoice.invoiceNumber(), invoice.issueDate(),
+                invoice.clientName(), invoice.clientNif(), invoice.clientAddress(),
+                invoice.lines().stream()
+                        .map(line -> new InvoiceLineRequestDto(line.description(), line.quantity(), line.unitPrice()))
+                        .toList());
+        request.setInvoiceId(invoice.id());
+        return request;
+    }
+
+    @Transactional(readOnly = true)
     public String suggestInvoiceNumber(LocalDate issueDate) {
-        return "FAC-" + issueDate.getYear() + "-" + String.format("%04d", invoiceRepositoryPort.countByYear(issueDate.getYear()) + 1);
+        String yearPrefix = "FAC-" + issueDate.getYear() + "-";
+        long nextSequence = invoiceRepositoryPort.findLatestInvoiceNumber(yearPrefix)
+                .map(this::sequenceFromInvoiceNumber)
+                .orElse(0L) + 1;
+        String candidate;
+        do {
+            candidate = yearPrefix + String.format("%04d", nextSequence++);
+        } while (invoiceRepositoryPort.existsByInvoiceNumber(candidate));
+        return candidate;
+    }
+
+    private long sequenceFromInvoiceNumber(String invoiceNumber) {
+        String[] parts = invoiceNumber.split("-");
+        if (parts.length != 3) {
+            return 0;
+        }
+        try {
+            return Long.parseLong(parts[2]);
+        } catch (NumberFormatException exception) {
+            return 0;
+        }
     }
 
     private Invoice findInvoice(Long id) {

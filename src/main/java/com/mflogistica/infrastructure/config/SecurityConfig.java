@@ -29,7 +29,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .defaultSuccessUrl("/dashboard/facturas", true)
                         .failureUrl("/login?error")
                         .permitAll())
                 .logout(logout -> logout
@@ -67,4 +67,3 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
-

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturas | MF Logística</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif }
+        #dashboardLayout { transition: grid-template-columns 200ms ease }
+        #dashboardSidebar { min-width: 0; transition: padding 200ms ease, transform 200ms ease, visibility 200ms ease }
+        @media (min-width: 1024px) {
+            #dashboardLayout.sidebar-collapsed { grid-template-columns: 0 minmax(0, 1fr) }
+            #dashboardLayout.sidebar-collapsed #dashboardSidebar {
+                visibility: hidden; overflow: hidden; padding-left: 0; padding-right: 0; border: 0
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#fdf9f4] text-[#242321]">
+<div id="dashboardLayout" class="min-h-screen lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
+<aside id="dashboardSidebar" class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col border-r border-black/[.04] bg-[#f9f6f2] p-6 lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 lg:p-8">
+    <a th:href="@{/dashboard/facturas}" class="flex items-center gap-3">
+        <img th:src="@{/images/mf-logo-transparent.png}" alt="MF Logística" class="h-12 w-12 object-contain">
+        <b class="text-xl">MF ADMIN</b>
+    </a>
+    <nav class="mt-14 space-y-3 text-base text-[#555]">
+        <a th:href="@{/dashboard/facturas}" class="flex items-center gap-4 rounded-lg bg-[#f1ede8] px-4 py-3 font-bold text-[#222]">
+            <span class="material-symbols-outlined">receipt_long</span>Facturas emitidas
+        </a>
+    </nav>
+    <div class="mt-auto flex items-center gap-3 rounded-xl bg-[#f1ede8] p-4 text-sm">
+        <span class="material-symbols-outlined grid h-10 w-10 place-items-center rounded-full bg-black text-white">person</span>
+        <span><b>Administración</b><br>fiscal@mflogistica.es</span>
+    </div>
+</aside>
+<button id="sidebarBackdrop" type="button" aria-label="Cerrar menú" class="fixed inset-0 z-30 hidden bg-black/30 lg:hidden"></button>
+<main>
+<header class="flex h-20 items-center justify-between border-b border-black/[.04] bg-white px-5 sm:px-8">
+    <div class="flex items-center gap-4">
+        <button id="sidebarToggle" type="button" aria-controls="dashboardSidebar" aria-expanded="false"
+                aria-label="Mostrar menú" title="Mostrar menú"
+                class="grid h-10 w-10 place-items-center rounded-lg bg-[#f1ede8] focus:outline-none focus:ring-2 focus:ring-black">
+            <span id="sidebarToggleIcon" class="material-symbols-outlined" aria-hidden="true">menu</span>
+        </button>
+        <span class="font-extrabold">MF ADMIN · FACTURAS</span>
+    </div>
+    <form method="post" th:action="@{/logout}">
+        <button class="grid h-10 w-10 place-items-center rounded-full bg-black text-white"
+                title="Cerrar sesión" aria-label="Cerrar sesión"><span class="material-symbols-outlined">person</span></button>
+    </form>
+</header>
+<div class="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+            <p class="text-sm font-bold uppercase tracking-wide text-[#ec5b88]">Gestión comercial</p>
+            <h1 class="mt-1 text-3xl font-extrabold">Facturas emitidas</h1>
+        </div>
+        <div class="flex flex-wrap items-center gap-4">
+            <p class="text-sm text-[#666]" th:text="${invoices.totalElements + ' facturas encontradas'}">0 facturas encontradas</p>
+            <a th:href="@{/dashboard}" class="inline-flex items-center gap-2 rounded-xl bg-black px-5 py-3 font-bold text-white shadow-sm">
+                <span class="material-symbols-outlined" aria-hidden="true">add</span>Nueva factura
+            </a>
+        </div>
+    </div>
+    <form method="get" th:action="@{/dashboard/facturas}"
+          class="mt-7 grid gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[.04] sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_190px_190px_auto_auto] lg:items-end">
+        <div>
+            <label for="q" class="mb-2 block text-sm font-bold">Número, cliente o NIF</label>
+            <input id="q" name="q" th:value="${query}" type="search" placeholder="Buscar factura..."
+                   class="w-full rounded-xl bg-[#f5f1ec] px-4 py-3 outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <div>
+            <label for="from" class="mb-2 block text-sm font-bold">Desde</label>
+            <input id="from" name="from" th:value="${from}" type="date"
+                   class="w-full rounded-xl bg-[#f5f1ec] px-4 py-3 outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <div>
+            <label for="to" class="mb-2 block text-sm font-bold">Hasta</label>
+            <input id="to" name="to" th:value="${to}" type="date"
+                   class="w-full rounded-xl bg-[#f5f1ec] px-4 py-3 outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <button type="submit" class="rounded-xl bg-black px-5 py-3 font-bold text-white">Buscar</button>
+        <a th:href="@{/dashboard/facturas}" class="rounded-xl bg-[#f1ede8] px-5 py-3 text-center font-bold">Limpiar</a>
+    </form>
+
+    <section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[.04]">
+        <div th:if="${invoices.isEmpty()}" class="p-8 text-center text-[#666]">
+            No hay facturas que coincidan con los filtros seleccionados.
+        </div>
+        <div th:unless="${invoices.isEmpty()}" class="overflow-x-auto">
+            <table class="w-full min-w-[720px] text-left text-sm">
+                <thead class="bg-[#f5f1ec] text-xs uppercase tracking-wide text-[#666]">
+                <tr>
+                    <th scope="col" class="px-5 py-4">Número</th>
+                    <th scope="col" class="px-5 py-4">Fecha</th>
+                    <th scope="col" class="px-5 py-4">Cliente</th>
+                    <th scope="col" class="px-5 py-4 text-right">Total</th>
+                    <th scope="col" class="px-5 py-4 text-right">Acciones</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-black/[.06]">
+                <tr th:each="invoice : ${invoices.content}" class="hover:bg-[#fdf9f4]">
+                    <td class="whitespace-nowrap px-5 py-4 font-bold" th:text="${invoice.invoiceNumber}">FAC-2026-001</td>
+                    <td class="whitespace-nowrap px-5 py-4" th:text="${#temporals.format(invoice.issueDate, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td class="px-5 py-4">
+                        <p class="font-semibold" th:text="${invoice.clientName}">Cliente</p>
+                        <p class="text-xs text-[#777]" th:text="${invoice.clientNif}">NIF</p>
+                    </td>
+                    <td class="whitespace-nowrap px-5 py-4 text-right font-bold"
+                        th:text="${#numbers.formatDecimal(invoice.totalAmount, 1, 'POINT', 2, 'COMMA') + ' €'}">0,00 €</td>
+                    <td class="whitespace-nowrap px-5 py-4 text-right">
+                        <a th:href="@{/dashboard/facturas/{id}/editar(id=${invoice.id})}"
+                           class="font-bold underline decoration-[#ec5b88] decoration-2 underline-offset-4">Editar</a>
+                        <a th:href="@{/dashboard/invoices/{id}/pdf(id=${invoice.id})}"
+                           class="ml-4 font-bold underline underline-offset-4">PDF</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <nav th:if="${invoices.totalPages > 1}" aria-label="Paginación de facturas"
+         class="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <a th:if="${invoices.hasPrevious()}"
+           th:href="@{/dashboard/facturas(q=${query},from=${from},to=${to},page=${invoices.number - 1})}"
+           class="rounded-lg bg-white px-4 py-3 text-sm font-bold shadow-sm">← Anterior</a>
+        <span th:unless="${invoices.hasPrevious()}" class="px-4 py-3 text-sm text-[#999]">← Anterior</span>
+        <span class="text-sm text-[#666]"
+              th:text="${'Página ' + (invoices.number + 1) + ' de ' + invoices.totalPages}">Página 1 de 1</span>
+        <a th:if="${invoices.hasNext()}"
+           th:href="@{/dashboard/facturas(q=${query},from=${from},to=${to},page=${invoices.number + 1})}"
+           class="rounded-lg bg-white px-4 py-3 text-sm font-bold shadow-sm">Siguiente →</a>
+        <span th:unless="${invoices.hasNext()}" class="px-4 py-3 text-sm text-[#999]">Siguiente →</span>
+    </nav>
+</div>
+</main>
+</div>
+<script>
+const layout = document.getElementById('dashboardLayout');
+const sidebar = document.getElementById('dashboardSidebar');
+const toggle = document.getElementById('sidebarToggle');
+const toggleIcon = document.getElementById('sidebarToggleIcon');
+const backdrop = document.getElementById('sidebarBackdrop');
+const desktopLayout = window.matchMedia('(min-width: 1024px)');
+function setSidebarExpanded(expanded) {
+    if (desktopLayout.matches) {
+        layout.classList.toggle('sidebar-collapsed', !expanded);
+    } else {
+        sidebar.classList.toggle('translate-x-0', expanded);
+        backdrop.classList.toggle('hidden', !expanded);
+    }
+    toggle.setAttribute('aria-expanded', String(expanded));
+    toggle.setAttribute('aria-label', expanded ? 'Ocultar menú' : 'Mostrar menú');
+    toggle.title = expanded ? 'Ocultar menú' : 'Mostrar menú';
+    toggleIcon.textContent = expanded ? 'menu_open' : 'menu';
+}
+function updateSidebarForViewport() {
+    setSidebarExpanded(desktopLayout.matches && localStorage.getItem('mf-dashboard-sidebar-expanded') === 'true');
+}
+function saveSidebarPreference(expanded) {
+    localStorage.setItem('mf-dashboard-sidebar-expanded', String(expanded));
+    setSidebarExpanded(expanded);
+}
+toggle.addEventListener('click', () => saveSidebarPreference(toggle.getAttribute('aria-expanded') !== 'true'));
+backdrop.addEventListener('click', () => saveSidebarPreference(false));
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !desktopLayout.matches && toggle.getAttribute('aria-expanded') === 'true') {
+        saveSidebarPreference(false);
+        toggle.focus();
+    }
+});
+sidebar.querySelector('nav').addEventListener('click', () => {
+    if (!desktopLayout.matches) saveSidebarPreference(false);
+});
+desktopLayout.addEventListener('change', updateSidebarForViewport);
+updateSidebarForViewport();
+</script>
+<script th:if="${downloadInvoiceId != null}" th:inline="javascript">
+    const invoicePdfUrl = /*[[@{/dashboard/invoices/{id}/pdf(id=${downloadInvoiceId})}]]*/ '';
+    window.history.replaceState({}, document.title, /*[[@{/dashboard/facturas}]]*/ '/dashboard/facturas');
+    const downloadLink = document.createElement('a');
+    downloadLink.href = invoicePdfUrl;
+    downloadLink.hidden = true;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    downloadLink.remove();
+</script>
+</body>
+</html>

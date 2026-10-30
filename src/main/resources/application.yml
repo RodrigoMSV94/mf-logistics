@@ -21,11 +21,14 @@ spring:
             non_contextual_creation: true
   thymeleaf:
     cache: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
 app:
+  local-data-reset:
+    enabled: ${APP_LOCAL_DATA_RESET_ENABLED:true}
   security:
     admin:
       email: ${APP_ADMIN_EMAIL:admin@mflogistica.es}
       password: ${APP_ADMIN_PASSWORD:Admin1234!}
       full-name: ${APP_ADMIN_FULL_NAME:Administrador MF}
-

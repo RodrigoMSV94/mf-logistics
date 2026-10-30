@@ -8,7 +8,8 @@ Sistema web modular para una empresa de logística y reparto en España (foco ac
 
 ## 2. Stack Tecnológico & Arquitectura
 * **Lenguaje:** Java 21 (LTS)
-* **Framework Principal:** Spring Boot 3.x / 4.x (Spring Framework 6/7)
+* **Framework Principal objetivo:** Spring Boot 4
+* **Versión declarada actualmente en `pom.xml`:** Spring Boot 3.3.5 (no asumir que el proyecto ya migró a Boot 4)
 * **Patrón de Arquitectura:** Clean Architecture + MVC (Model-View-Controller)
 * **Principios de Diseño:** SOLID, Clean Code, DRY, KISS, YAGNI
 * **Módulos Spring:**
@@ -18,6 +19,7 @@ Sistema web modular para una empresa de logística y reparto en España (foco ac
   * `spring-boot-starter-security` (Autenticación y autorización)
   * `spring-boot-starter-validation` (Validación de DTOs)
 * **Base de Datos:** PostgreSQL (Desarrollo local + Producción en **Neon DB**)
+* **Migraciones:** Liquibase para evolucionar el esquema y versionar datos iniciales
 * **Generación de PDF:** `OpenPDF` (`com.github.librepdf:openpdf`)
 * **Frontend UI:** Thymeleaf + Tailwind CSS (vía CDN) + Google Material Symbols
 * **Despliegue Target:** Render (Web Service vía Dockerfile)
@@ -93,6 +95,9 @@ mf-logistica/
 2. **Open/Closed & Interface Segregation (OCP/ISP):** El servicio de PDF e infraestructura implementan interfaces/puertos (`PdfGeneratorPort`), permitiendo cambiar la librería sin afectar la lógica de negocio.
 3. **Dependency Inversion (DIP):** El núcleo de la aplicación depende de abstracciones (puertos), no de implementaciones concretas de PostgreSQL o PDF.
 
+### Criterios obligatorios para cada cambio
+Aplicar Java 21 y Spring Boot 4 como estándares objetivo, manteniendo explícito que la versión declarada del proyecto sigue siendo Spring Boot 3.3.5 hasta que se solicite y complete una migración. Cada cambio funcional debe incluir pruebas unitarias y de integración que cubran el comportamiento solicitado; verificar exactamente las superficies afectadas (por ejemplo, plantilla renderizada, persistencia/migración o flujo HTTP), y ejecutar la suite completa cuando sea viable. Las migraciones de base de datos deben ser versionadas con Liquibase y proteger los datos existentes. Estas reglas también están en `AGENTS.md` para futuras sesiones.
+
 ## 5. Modelos de Datos
 
 ### Entidad `User`
@@ -119,6 +124,13 @@ mf-logistica/
 
 El dashboard calcula los importes desde las líneas de factura: base imponible, IVA fijo del 21%, retención IRPF fija del 1% y total (`base + IVA - retención`). Los tipos fijos se aplican también en el servicio de aplicación; no dependen de valores enviados por el navegador.
 
+### Entidad `Client`
+* `nif` (String, PK)
+* `name` (String, Not Null)
+* `address` (String)
+
+El cliente de ejemplo SAÚL GUERRERO LÓPEZ (`73025558Y`) se incorpora en `src/main/resources/db/changelog/db.changelog-master.xml`. Liquibase crea la tabla y siembra el cliente de forma idempotente; las facturas guardadas sincronizan sus datos en el catálogo de clientes.
+
 ## 6. Mapeo de Rutas MVC
 
 | Método | Ruta | Controlador | Descripción | Permisos |
@@ -127,7 +139,9 @@ El dashboard calcula los importes desde las líneas de factura: base imponible, 
 | `GET` | `/login` | `AuthController` | Renderiza `login.html` | Público |
 | `POST` | `/login` | `Security` | Autenticación de administradores | Público |
 | `GET` | `/dashboard` | `DashboardController` | Renderiza `dashboard.html` | `ROLE_ADMIN` |
-| `POST` | `/dashboard/invoices` | `DashboardController` | Procesa creación y guarda factura | `ROLE_ADMIN` |
+| `GET` | `/dashboard/facturas` | `DashboardController` | Lista, filtra y pagina facturas | `ROLE_ADMIN` |
+| `GET` | `/dashboard/facturas/{id}/editar` | `DashboardController` | Abre una factura para edición | `ROLE_ADMIN` |
+| `POST` | `/dashboard/invoices` | `DashboardController` | Crea o actualiza una factura y descarga su PDF | `ROLE_ADMIN` |
 | `GET` | `/dashboard/invoices/{id}/pdf` | `DashboardController` | Descarga el archivo PDF directo | `ROLE_ADMIN` |
 
 ## 7. Configuración de Entornos (Render + Neon DB)
