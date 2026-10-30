@@ -310,7 +310,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
                 "-" + percent(invoice.irpfRate()), true);
         addTotalRow(totals, "TOTAL\nRETENCIONES", euro(invoice.totalRetentions()), true);
 
-        PdfPTable grandTotalContent = new PdfPTable(new float[]{1, 1});
+        PdfPTable grandTotalContent = new PdfPTable(new float[]{0.72f, 1.28f});
         grandTotalContent.setWidthPercentage(100);
         PdfPCell grandTotalLabel = new PdfPCell();
         grandTotalLabel.setBorder(Rectangle.NO_BORDER);
@@ -333,7 +333,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         PdfPCell grandTotal = new PdfPCell(grandTotalContent);
         grandTotal.setColspan(2);
         grandTotal.setBorder(Rectangle.NO_BORDER);
-        grandTotal.setBackgroundColor(INK);
+        grandTotal.setCellEvent(new BottomRoundedCellEvent(INK, 9));
         grandTotal.setPadding(12.65f);
         addStyledCell(totals, grandTotal);
 
@@ -541,6 +541,43 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
                         position.getWidth(), position.getHeight(), radius);
                 canvas.fillStroke();
             }
+            canvas.restoreState();
+        }
+
+    }
+
+    private static final class BottomRoundedCellEvent implements com.lowagie.text.pdf.PdfPCellEvent {
+
+        private final Color background;
+        private final float radius;
+
+        private BottomRoundedCellEvent(Color background, float radius) {
+            this.background = background;
+            this.radius = radius;
+        }
+
+        @Override
+        public void cellLayout(PdfPCell cell, Rectangle position,
+                               com.lowagie.text.pdf.PdfContentByte[] canvases) {
+            com.lowagie.text.pdf.PdfContentByte canvas =
+                    canvases[PdfPTable.BACKGROUNDCANVAS];
+            float left = position.getLeft() + 0.5f;
+            float right = position.getRight() - 0.5f;
+            float bottom = position.getBottom() + 0.5f;
+            float top = position.getTop();
+            float curve = radius * 0.55228475f;
+
+            canvas.saveState();
+            canvas.setColorFill(background);
+            canvas.moveTo(left, top);
+            canvas.lineTo(right, top);
+            canvas.lineTo(right, bottom + radius);
+            canvas.curveTo(right, bottom + radius - curve,
+                    right - radius + curve, bottom, right - radius, bottom);
+            canvas.lineTo(left + radius, bottom);
+            canvas.curveTo(left + radius - curve, bottom,
+                    left, bottom + radius - curve, left, bottom + radius);
+            canvas.closePathFillStroke();
             canvas.restoreState();
         }
     }

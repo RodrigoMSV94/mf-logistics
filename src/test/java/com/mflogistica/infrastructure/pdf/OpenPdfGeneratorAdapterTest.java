@@ -24,14 +24,14 @@ class OpenPdfGeneratorAdapterTest {
                 "B12345678",
                 "Calle Mayor 1",
                 LocalDate.of(2026, 10, 30),
-                new BigDecimal("100.00"),
+                new BigDecimal("5467.15"),
                 new BigDecimal("21.00"),
-                new BigDecimal("21.00"),
+                new BigDecimal("1148.10"),
                 new BigDecimal("1.00"),
-                new BigDecimal("-1.00"),
-                new BigDecimal("120.00"),
+                new BigDecimal("-54.67"),
+                new BigDecimal("6560.58"),
                 List.of(new InvoiceLine(1L, "Servicio de reparto", BigDecimal.ONE,
-                        new BigDecimal("100.00"), new BigDecimal("100.00")))
+                        new BigDecimal("5467.15"), new BigDecimal("5467.15")))
         );
 
         byte[] pdf = new OpenPdfGeneratorAdapter().generateInvoicePdf(invoice);
@@ -44,6 +44,6 @@ class OpenPdfGeneratorAdapterTest {
         assertTrue(text.contains("Cliente Demo"));
         assertTrue(text.contains("CAIXABANK ESPAÑA"));
         assertTrue(text.contains("BASE IMPONIBLE"));
-        assertTrue(text.contains("120,00"));
+        assertTrue(text.contains("6.560,58 €"));
     }
 }
