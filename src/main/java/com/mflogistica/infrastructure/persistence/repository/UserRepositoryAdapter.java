@@ -20,8 +20,8 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     }
 
     @Override
-    public Optional<User> findByEmail(String email) {
-        return springDataUserRepository.findByEmail(email).map(userMapper::toDomain);
+    public Optional<User> findByUsername(String username) {
+        return springDataUserRepository.findByUsername(username).map(userMapper::toDomain);
     }
 
     @Override
@@ -30,4 +30,3 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
         return userMapper.toDomain(saved);
     }
 }
-

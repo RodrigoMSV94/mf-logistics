@@ -34,4 +34,81 @@
                     value="Contrato Logístico Operativo&#10;Carrer Comanegra, 3&#10;17252 Calonge (Girona, España)"/>
         </insert>
     </changeSet>
+    <changeSet id="20261030-03-create-fiscal-data" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="fiscal_data"/>
+            </not>
+        </preConditions>
+        <createTable tableName="fiscal_data">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_fiscal_data"/>
+            </column>
+            <column name="issuer_name" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="nif" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phone" type="varchar(40)"/>
+            <column name="email" type="varchar(150)"/>
+            <column name="iban" type="varchar(34)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <insert tableName="fiscal_data">
+            <column name="id" valueNumeric="1"/>
+            <column name="issuer_name" value="MARTHA DENISSE CARRILLO TOVAR"/>
+            <column name="nif" value="Y8023499D"/>
+            <column name="address" value="Carrer del Pintor Huguet, 1&#10;17310 Lloret de Mar (Girona, España)"/>
+            <column name="phone" value="+34 664 008 020"/>
+            <column name="email" value="denissecarrillo1986@gmail.com"/>
+            <column name="iban" value="ES50 2100 8137 8902 0047 3817"/>
+        </insert>
+    </changeSet>
+    <changeSet id="20261030-04-snapshot-invoice-issuer" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="invoices"/>
+        </preConditions>
+        <addColumn tableName="invoices">
+            <column name="issuer_name" type="varchar(120)"/>
+            <column name="issuer_nif" type="varchar(20)"/>
+            <column name="issuer_address" type="varchar(255)"/>
+            <column name="issuer_phone" type="varchar(40)"/>
+            <column name="issuer_email" type="varchar(150)"/>
+            <column name="issuer_iban" type="varchar(34)"/>
+        </addColumn>
+        <update tableName="invoices">
+            <column name="issuer_name" value="MARTHA DENISSE CARRILLO TOVAR"/>
+            <column name="issuer_nif" value="Y8023499D"/>
+            <column name="issuer_address" value="Carrer del Pintor Huguet, 1&#10;17310 Lloret de Mar (Girona, España)"/>
+            <column name="issuer_phone" value="+34 664 008 020"/>
+            <column name="issuer_email" value="denissecarrillo1986@gmail.com"/>
+            <column name="issuer_iban" value="ES50 2100 8137 8902 0047 3817"/>
+        </update>
+        <addNotNullConstraint tableName="invoices" columnName="issuer_name" columnDataType="varchar(120)"/>
+        <addNotNullConstraint tableName="invoices" columnName="issuer_nif" columnDataType="varchar(20)"/>
+        <addNotNullConstraint tableName="invoices" columnName="issuer_address" columnDataType="varchar(255)"/>
+        <addNotNullConstraint tableName="invoices" columnName="issuer_iban" columnDataType="varchar(34)"/>
+    </changeSet>
+    <changeSet id="20261030-05-email-to-username" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="users"/>
+                <columnExists tableName="users" columnName="email"/>
+                <not>
+                    <columnExists tableName="users" columnName="username"/>
+                </not>
+            </and>
+        </preConditions>
+        <renameColumn tableName="users" oldColumnName="email" newColumnName="username"
+                      columnDataType="varchar(150)"/>
+        <update tableName="users">
+            <column name="username" value="mfadmin"/>
+            <where>username = 'admin@mflogistica.es'</where>
+        </update>
+    </changeSet>
 </databaseChangeLog>

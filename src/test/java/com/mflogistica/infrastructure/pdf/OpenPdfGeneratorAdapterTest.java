@@ -2,6 +2,7 @@ package com.mflogistica.infrastructure.pdf;
 
 import com.mflogistica.domain.model.Invoice;
 import com.mflogistica.domain.model.InvoiceLine;
+import com.mflogistica.domain.model.FiscalData;
 import com.lowagie.text.pdf.PdfReader;
 import com.lowagie.text.pdf.PdfName;
 import com.lowagie.text.pdf.PdfDictionary;
@@ -36,7 +37,11 @@ class OpenPdfGeneratorAdapterTest {
                 new BigDecimal("-54.67"),
                 new BigDecimal("6560.58"),
                 List.of(new InvoiceLine(1L, "Servicio de reparto\nRuta Girona", BigDecimal.ONE,
-                        new BigDecimal("5467.15"), new BigDecimal("5467.15")))
+                        new BigDecimal("5467.15"), new BigDecimal("5467.15"))),
+                new FiscalData("MARTHA DENISSE CARRILLO TOVAR", "Y8023499D",
+                        "Carrer del Pintor Huguet, 1\n17310 Lloret de Mar (Girona, España)",
+                        "+34 664 008 020", "denissecarrillo1986@gmail.com",
+                        "ES50 2100 8137 8902 0047 3817")
         );
 
         byte[] pdf = new OpenPdfGeneratorAdapter().generateInvoicePdf(invoice);
@@ -61,6 +66,9 @@ class OpenPdfGeneratorAdapterTest {
         assertTrue(text.contains("Cliente Demo"));
         assertTrue(text.contains("Ruta Girona"));
         assertTrue(text.contains("CAIXABANK ESPAÑA"));
+        assertTrue(text.contains("MARTHA DENISSE CARRILLO TOVAR"));
+        assertTrue(text.contains("Y8023499D"));
+        assertTrue(text.contains("ES50 2100 8137 8902 0047 3817"));
         assertTrue(text.contains("BASE IMPONIBLE"));
         assertTrue(text.contains("IVA (21,00%)"), text);
         assertTrue(text.contains("21,00%"), text);

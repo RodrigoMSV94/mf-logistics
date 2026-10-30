@@ -45,14 +45,6 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd / MM / yyyy");
     private static final float SUMMARY_TOP_FROM_BOTTOM = 367;
     private static final String LOGO_PATH = "static/images/mf-logo-transparent.png";
-    private static final String ISSUER_NAME = "MARTHA DENISSE CARRILLO TOVAR";
-    private static final String ISSUER_NIF = "Y8023499D";
-    private static final String ISSUER_ADDRESS = "Carrer del Pintor Huguet, 1\n"
-            + "17310 Lloret de Mar (Girona, España)";
-    private static final String ISSUER_PHONE = "+34 664 008 020";
-    private static final String ISSUER_EMAIL = "denissecarrillo1986@gmail.com";
-    private static final String IBAN = "ES50 2100 8137 8902 0047 3817";
-
     @Override
     public byte[] generateInvoicePdf(Invoice invoice) {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -130,13 +122,14 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         parties.setSpacingBefore(13);
         parties.setSpacingAfter(16);
         parties.setKeepTogether(true);
+        var issuer = invoice.issuerSnapshot();
         parties.addCell(partyCell(
                 "EMISOR / PRESTADOR",
-                "NIF " + ISSUER_NIF,
-                ISSUER_NAME,
-                "MF LOGÍSTICA\n" + ISSUER_ADDRESS
-                        + "\nTeléfono: " + ISSUER_PHONE
-                        + "\nEmail: " + ISSUER_EMAIL
+                "NIF " + issuer.nif(),
+                issuer.issuerName(),
+                issuer.address()
+                        + "\nTeléfono: " + issuer.phone()
+                        + "\nEmail: " + issuer.email()
         ));
         PdfPCell gap = new PdfPCell();
         gap.setBorder(Rectangle.NO_BORDER);
@@ -227,7 +220,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         summary.setWidthPercentage(100);
         summary.setSpacingAfter(14);
         summary.setKeepTogether(true);
-        summary.addCell(paymentCard());
+        summary.addCell(paymentCard(invoice.issuerSnapshot()));
         PdfPCell gap = new PdfPCell();
         gap.setBorder(Rectangle.NO_BORDER);
         summary.addCell(gap);
@@ -235,7 +228,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         document.add(summary);
     }
 
-    private PdfPCell paymentCard() {
+    private PdfPCell paymentCard(com.mflogistica.domain.model.FiscalData issuer) {
         PdfPCell card = new PdfPCell();
         card.setBorder(Rectangle.NO_BORDER);
         card.setBackgroundColor(SAND);
@@ -260,7 +253,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         iban.setPaddingBottom(6);
         iban.addElement(new Paragraph("CÓDIGO INTERNACIONAL DE CUENTA (IBAN)",
                 font(7, Font.BOLD, new Color(0x8A, 0x7B, 0x6C))));
-        Paragraph ibanValue = new Paragraph(IBAN, font(10, Font.BOLD, INK, FontFactory.COURIER));
+        Paragraph ibanValue = new Paragraph(issuer.iban(), font(10, Font.BOLD, INK, FontFactory.COURIER));
         ibanValue.setSpacingBefore(3);
         iban.addElement(ibanValue);
         PdfPTable ibanTable = new PdfPTable(1);
@@ -271,7 +264,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         Paragraph beneficiary = new Paragraph();
         beneficiary.setFont(font(7.5f, Font.NORMAL, MUTED));
         beneficiary.add(new Phrase("Beneficiario: ", font(7.5f, Font.BOLD, MUTED)));
-        beneficiary.add(new Phrase(ISSUER_NAME, font(7.5f, Font.NORMAL, MUTED)));
+        beneficiary.add(new Phrase(issuer.issuerName(), font(7.5f, Font.NORMAL, MUTED)));
         beneficiary.setSpacingBefore(5);
         card.addElement(beneficiary);
         PdfPTable paymentTable = new PdfPTable(1);

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos fiscales | MF Logística</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif }
+        #dashboardLayout { transition: grid-template-columns 200ms ease }
+        #dashboardSidebar { min-width: 0; transition: padding 200ms ease, transform 200ms ease, visibility 200ms ease }
+        @media (min-width: 1024px) {
+            #dashboardLayout.sidebar-collapsed { grid-template-columns: 0 minmax(0, 1fr) }
+            #dashboardLayout.sidebar-collapsed #dashboardSidebar {
+                visibility: hidden; overflow: hidden; padding-left: 0; padding-right: 0; border: 0
+            }
+        }
+        .field { width: 100%; border-radius: .75rem; background: #f5f1ec; padding: .8rem 1rem; outline: none }
+        .field:focus { box-shadow: 0 0 0 2px #242321 }
+        .error { margin-top: .35rem; font-size: .875rem; color: #dc2626 }
+    </style>
+</head>
+<body class="min-h-screen bg-[#fdf9f4] text-[#242321]">
+<div id="dashboardLayout" class="min-h-screen lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
+    <aside id="dashboardSidebar" class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col border-r border-black/[.04] bg-[#f9f6f2] p-6 lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 lg:p-8">
+        <a th:href="@{/dashboard/facturas}" class="flex items-center gap-3">
+            <img th:src="@{/images/mf-logo-transparent.png}" alt="MF Logística" class="h-12 w-12 object-contain">
+            <b class="text-xl">MF ADMIN</b>
+        </a>
+        <nav class="mt-14 space-y-3 text-base text-[#555]">
+            <a th:href="@{/dashboard/facturas}" class="flex items-center gap-4 rounded-lg px-4 py-3 font-bold hover:bg-[#f1ede8]">
+                <span class="material-symbols-outlined">receipt_long</span>Facturas emitidas
+            </a>
+            <a th:href="@{/dashboard/datos-fiscales}" class="flex items-center gap-4 rounded-lg bg-[#f1ede8] px-4 py-3 font-bold text-[#222]">
+                <span class="material-symbols-outlined">account_balance</span>Datos fiscales
+            </a>
+        </nav>
+        <div class="mt-auto flex items-center gap-3 rounded-xl bg-[#f1ede8] p-4 text-sm">
+            <span class="material-symbols-outlined grid h-10 w-10 place-items-center rounded-full bg-black text-white">person</span>
+            <span><b>Administración</b><br>fiscal@mflogistica.es</span>
+        </div>
+    </aside>
+    <button id="sidebarBackdrop" type="button" aria-label="Cerrar menú" class="fixed inset-0 z-30 hidden bg-black/30 lg:hidden"></button>
+    <main>
+        <header class="flex h-20 items-center justify-between border-b border-black/[.04] bg-white px-6 md:px-12">
+            <div class="flex items-center gap-4">
+                <button id="sidebarToggle" type="button" aria-controls="dashboardSidebar" aria-expanded="false" aria-label="Mostrar menú" title="Mostrar menú"
+                        class="grid h-10 w-10 place-items-center rounded-lg bg-[#f1ede8] focus:outline-none focus:ring-2 focus:ring-black">
+                    <span id="sidebarToggleIcon" class="material-symbols-outlined" aria-hidden="true">menu</span>
+                </button>
+                <span class="text-sm font-bold uppercase tracking-wider text-[#555]">Terminal Administrativo</span>
+            </div>
+            <form method="post" th:action="@{/logout}">
+                <button class="grid h-10 w-10 place-items-center rounded-full bg-red-50 text-red-600 hover:bg-red-100"
+                        title="Cerrar sesión" aria-label="Cerrar sesión"><span class="material-symbols-outlined">logout</span></button>
+            </form>
+        </header>
+        <div class="mx-auto w-full max-w-4xl px-4 py-7 sm:px-6 lg:px-10">
+            <p class="text-sm font-bold uppercase tracking-wide text-[#ec5b88]">Configuración de facturación</p>
+            <h1 class="mt-1 text-3xl font-extrabold">Datos fiscales del emisor</h1>
+            <p class="mt-3 max-w-3xl text-sm leading-6 text-[#666]">
+                Estos datos se guardan como una copia en cada factura nueva. Los cambios no modifican las facturas emitidas anteriormente.
+            </p>
+            <div th:if="${saved}" class="mt-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">
+                Datos fiscales actualizados correctamente. Se aplicarán a las próximas facturas.
+            </div>
+            <form method="post" th:action="@{/dashboard/datos-fiscales}" th:object="${fiscalData}"
+                  class="mt-7 space-y-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[.04] sm:p-8">
+                <div>
+                    <label for="issuerName" class="mb-2 block text-sm font-bold">Nombre o razón social</label>
+                    <input id="issuerName" th:field="*{issuerName}" class="field">
+                    <p class="error" th:if="${#fields.hasErrors('issuerName')}" th:errors="*{issuerName}"></p>
+                </div>
+                <div class="grid gap-6 sm:grid-cols-2">
+                    <div>
+                        <label for="nif" class="mb-2 block text-sm font-bold">NIF/CIF</label>
+                        <input id="nif" th:field="*{nif}" class="field">
+                        <p class="error" th:if="${#fields.hasErrors('nif')}" th:errors="*{nif}"></p>
+                    </div>
+                    <div>
+                        <label for="phone" class="mb-2 block text-sm font-bold">Teléfono</label>
+                        <input id="phone" th:field="*{phone}" class="field">
+                        <p class="error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></p>
+                    </div>
+                </div>
+                <div>
+                    <label for="address" class="mb-2 block text-sm font-bold">Dirección fiscal</label>
+                    <textarea id="address" th:field="*{address}" rows="3" class="field resize-y"></textarea>
+                    <p class="error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></p>
+                </div>
+                <div class="grid gap-6 sm:grid-cols-2">
+                    <div>
+                        <label for="email" class="mb-2 block text-sm font-bold">Correo electrónico</label>
+                        <input id="email" type="email" th:field="*{email}" class="field">
+                        <p class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
+                    </div>
+                    <div>
+                        <label for="iban" class="mb-2 block text-sm font-bold">IBAN</label>
+                        <input id="iban" th:field="*{iban}" class="field">
+                        <p class="error" th:if="${#fields.hasErrors('iban')}" th:errors="*{iban}"></p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-3 pt-2">
+                    <button type="submit" class="rounded-xl bg-black px-6 py-3 font-bold text-white">Guardar datos fiscales</button>
+                    <a th:href="@{/dashboard/facturas}" class="rounded-xl bg-[#f1ede8] px-6 py-3 text-center font-bold">Volver a facturas</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+<script>
+const layout = document.getElementById('dashboardLayout');
+const sidebar = document.getElementById('dashboardSidebar');
+const toggle = document.getElementById('sidebarToggle');
+const toggleIcon = document.getElementById('sidebarToggleIcon');
+const backdrop = document.getElementById('sidebarBackdrop');
+const desktopLayout = window.matchMedia('(min-width: 1024px)');
+function setSidebarExpanded(expanded) {
+    if (desktopLayout.matches) layout.classList.toggle('sidebar-collapsed', !expanded);
+    else {
+        sidebar.classList.toggle('translate-x-0', expanded);
+        backdrop.classList.toggle('hidden', !expanded);
+    }
+    toggle.setAttribute('aria-expanded', String(expanded));
+    toggle.setAttribute('aria-label', expanded ? 'Ocultar menú' : 'Mostrar menú');
+    toggle.title = expanded ? 'Ocultar menú' : 'Mostrar menú';
+    toggleIcon.textContent = expanded ? 'menu_open' : 'menu';
+}
+function updateSidebarForViewport() {
+    setSidebarExpanded(desktopLayout.matches && localStorage.getItem('mf-dashboard-sidebar-expanded') === 'true');
+}
+function saveSidebarPreference(expanded) {
+    localStorage.setItem('mf-dashboard-sidebar-expanded', String(expanded));
+    setSidebarExpanded(expanded);
+}
+toggle.addEventListener('click', () => saveSidebarPreference(toggle.getAttribute('aria-expanded') !== 'true'));
+backdrop.addEventListener('click', () => saveSidebarPreference(false));
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !desktopLayout.matches && toggle.getAttribute('aria-expanded') === 'true') {
+        saveSidebarPreference(false);
+        toggle.focus();
+    }
+});
+sidebar.querySelector('nav').addEventListener('click', () => {
+    if (!desktopLayout.matches) saveSidebarPreference(false);
+});
+desktopLayout.addEventListener('change', updateSidebarForViewport);
+updateSidebarForViewport();
+</script>
+</body>
+</html>

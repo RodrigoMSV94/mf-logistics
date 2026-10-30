@@ -62,6 +62,24 @@ public class InvoiceEntity {
     @Column(nullable = false, length = 255)
     private String concept;
 
+    @Column(nullable = false, length = 120)
+    private String issuerName;
+
+    @Column(nullable = false, length = 20)
+    private String issuerNif;
+
+    @Column(nullable = false, length = 255)
+    private String issuerAddress;
+
+    @Column(length = 40)
+    private String issuerPhone;
+
+    @Column(length = 150)
+    private String issuerEmail;
+
+    @Column(nullable = false, length = 34)
+    private String issuerIban;
+
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InvoiceLineEntity> lines = new ArrayList<>();
 

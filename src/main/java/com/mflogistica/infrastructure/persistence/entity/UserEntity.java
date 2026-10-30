@@ -16,7 +16,7 @@ public class UserEntity {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 150)
-    private String email;
+    private String username;
 
     @Column(nullable = false)
     private String password;
@@ -35,12 +35,12 @@ public class UserEntity {
         this.id = id;
     }
 
-    public String getEmail() {
-        return email;
+    public String getUsername() {
+        return username;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {
@@ -67,4 +67,3 @@ public class UserEntity {
         this.role = role;
     }
 }
-

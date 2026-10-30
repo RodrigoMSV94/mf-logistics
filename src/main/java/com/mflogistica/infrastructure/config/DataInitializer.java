@@ -1,6 +1,7 @@
 package com.mflogistica.infrastructure.config;
 
 import com.mflogistica.application.service.AuthService;
+import com.mflogistica.application.service.FiscalDataService;
 import com.mflogistica.application.service.InvoiceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ public class DataInitializer implements CommandLineRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataInitializer.class);
     private final AuthService authService;
     private final InvoiceService invoiceService;
+    private final FiscalDataService fiscalDataService;
 
     @Value("${spring.datasource.url}")
     private String datasourceUrl;
@@ -23,8 +25,8 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${app.local-data-reset.enabled:true}")
     private boolean localDataResetEnabled;
 
-    @Value("${app.security.admin.email:admin@mflogistica.es}")
-    private String adminEmail;
+    @Value("${app.security.admin.username:mfadmin}")
+    private String adminUsername;
 
     @Value("${app.security.admin.password:Admin1234!}")
     private String adminPassword;
@@ -32,14 +34,17 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${app.security.admin.full-name:Administrador MF}")
     private String adminFullName;
 
-    public DataInitializer(AuthService authService, InvoiceService invoiceService) {
+    public DataInitializer(AuthService authService, InvoiceService invoiceService,
+                           FiscalDataService fiscalDataService) {
         this.authService = authService;
         this.invoiceService = invoiceService;
+        this.fiscalDataService = fiscalDataService;
     }
 
     @Override
     public void run(String... args) {
-        authService.ensureAdminUser(adminEmail, adminPassword, adminFullName);
+        authService.ensureAdminUser(adminUsername, adminPassword, adminFullName);
+        fiscalDataService.ensureDefaults();
         if (localDataResetEnabled && isLoopbackPostgres(datasourceUrl)) {
             LOGGER.warn("Base de datos PostgreSQL local detectada: se reemplazarán las facturas por los datos de ejemplo.");
             invoiceService.resetLocalDevelopmentInvoices();

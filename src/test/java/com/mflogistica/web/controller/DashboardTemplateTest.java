@@ -58,6 +58,10 @@ class DashboardTemplateTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("1.481,47 €")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"sidebarToggle\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("account_balance")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Datos fiscales")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(">logout</span>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("text-red-600")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Facturas emitidas")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("SAÚL GUERRERO LÓPEZ")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
@@ -117,6 +121,8 @@ class DashboardTemplateTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Facturas emitidas")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"sidebarToggle\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Datos fiscales")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(">logout</span>")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
                         "mf-dashboard-sidebar-expanded")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Nueva factura")))

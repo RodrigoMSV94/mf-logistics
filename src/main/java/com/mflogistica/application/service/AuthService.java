@@ -18,14 +18,14 @@ public class AuthService {
     }
 
     @Transactional
-    public void ensureAdminUser(String email, String rawPassword, String fullName) {
-        if (userRepositoryPort.findByEmail(email).isPresent()) {
+    public void ensureAdminUser(String username, String rawPassword, String fullName) {
+        if (userRepositoryPort.findByUsername(username).isPresent()) {
             return;
         }
 
         User admin = new User(
                 null,
-                email,
+                username,
                 passwordEncoder.encode(rawPassword),
                 fullName,
                 "ROLE_ADMIN"
@@ -34,4 +34,3 @@ public class AuthService {
         userRepositoryPort.save(admin);
     }
 }
-

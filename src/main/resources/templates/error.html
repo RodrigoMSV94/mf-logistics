@@ -28,6 +28,9 @@
             <a href="/dashboard/facturas" class="flex items-center gap-4 rounded-lg px-4 py-3 font-bold hover:bg-[#f1ede8]">
                 <span class="material-symbols-outlined">receipt_long</span>Facturas emitidas
             </a>
+            <a href="/dashboard/datos-fiscales" class="flex items-center gap-4 rounded-lg px-4 py-3 font-bold hover:bg-[#f1ede8]">
+                <span class="material-symbols-outlined">account_balance</span>Datos fiscales
+            </a>
         </nav>
         <div class="mt-auto flex items-center gap-3 rounded-xl bg-[#f1ede8] p-4 text-sm">
             <span class="material-symbols-outlined grid h-10 w-10 place-items-center rounded-full bg-black text-white">person</span>
@@ -42,9 +45,9 @@
                     class="grid h-10 w-10 place-items-center rounded-lg bg-[#f1ede8] focus:outline-none focus:ring-2 focus:ring-black">
                 <span id="sidebarToggleIcon" class="material-symbols-outlined" aria-hidden="true">menu</span>
             </button>
-            <form method="post" action="/logout">
-                <button class="grid h-10 w-10 place-items-center rounded-full bg-black text-white"
-                        title="Cerrar sesión" aria-label="Cerrar sesión"><span class="material-symbols-outlined">person</span></button>
+            <form method="post" th:action="@{/logout}">
+                <button class="grid h-10 w-10 place-items-center rounded-full bg-red-50 text-red-600 hover:bg-red-100"
+                        title="Cerrar sesión" aria-label="Cerrar sesión"><span class="material-symbols-outlined">logout</span></button>
             </form>
         </header>
         <div class="flex min-h-[calc(100vh-5rem)] items-center justify-center px-6 py-10">
