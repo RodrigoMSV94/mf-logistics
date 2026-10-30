@@ -47,14 +47,14 @@
     <aside id="dashboardSidebar"
            class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col border-r border-black/[.04] bg-[#f9f6f2] p-6 lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 lg:p-8">
         <a th:href="@{/}" class="flex items-center gap-3">
-            <img th:src="@{/images/mf-logo-light.png}" src="/images/mf-logo-light.png" alt="MF"
-                 class="h-11 w-11 rounded-lg object-cover">
+            <img th:src="@{/images/mf-logo-transparent.png}" src="/images/mf-logo-transparent.png" alt="MF"
+                 class="h-12 w-12 object-contain">
             <b class="text-xl">MF ADMIN</b>
         </a>
-        <nav class="mt-14 space-y-3 text-lg text-[#555]">
-            <a href="#invoice-form"
+        <nav class="mt-14 space-y-3 text-base text-[#555]">
+            <a th:href="@{/dashboard/facturas}"
                class="flex items-center gap-4 rounded-lg bg-[#f1ede8] px-4 py-3 font-bold text-[#222]">
-                <span class="material-symbols-outlined">receipt_long</span>Facturación
+                <span class="material-symbols-outlined">receipt_long</span>Facturas emitidas
             </a>
         </nav>
         <div class="mt-auto flex items-center gap-3 rounded-xl bg-[#f1ede8] p-4 text-sm">
@@ -72,46 +72,72 @@
                         class="grid h-10 w-10 place-items-center rounded-lg bg-[#f1ede8] text-[#242321] focus:outline-none focus:ring-2 focus:ring-black">
                     <span id="sidebarToggleIcon" class="material-symbols-outlined" aria-hidden="true">menu</span>
                 </button>
-                <span class="text-sm font-bold uppercase tracking-wider text-[#555]">Terminal Administrativo</span>
+                <span class="hidden text-sm font-bold uppercase tracking-wider text-[#555] sm:inline">Terminal Administrativo</span>
             </div>
             <form method="post" th:action="@{/logout}">
                 <button class="grid h-10 w-10 place-items-center rounded-full bg-black text-white"
                         title="Cerrar sesión" aria-label="Cerrar sesión"><span class="material-symbols-outlined">person</span></button>
             </form>
         </header>
-        <div class="mx-auto max-w-7xl px-5 py-8 md:px-12">
+        <div class="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
             <div class="flex flex-col justify-between gap-5 rounded-2xl bg-[#f5f1ec] p-6 md:flex-row md:items-center">
-                <div class="flex items-center gap-5"><img th:src="@{/images/mf-logo-black.png}"
+                <div class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5"><img th:src="@{/images/mf-logo-black.png}"
                                                           src="/images/mf-logo-black.png" alt="MF"
                                                           class="h-16 w-16 rounded-xl object-cover">
                     <div><p class="text-sm font-bold uppercase tracking-wide text-[#666]">Gestión comercial <span
                             class="ml-2 text-[#ec5b88]">● Sistema activo</span></p>
-                        <h1 class="text-3xl font-extrabold">Módulo de Facturación</h1></div>
+                        <h1 class="text-2xl font-extrabold sm:text-3xl">Módulo de Facturación</h1></div>
                 </div>
-                <a href="#invoice-form" class="rounded-xl bg-black px-6 py-4 font-bold text-white shadow-md">＋ Nueva
-                    Factura</a></div>
+                <div class="flex flex-wrap gap-3">
+                    <a th:href="@{/dashboard/facturas}" class="rounded-xl bg-white px-5 py-4 font-bold shadow-sm">Ver facturas</a>
+                    <a href="#invoice-form" class="rounded-xl bg-black px-6 py-4 font-bold text-white shadow-md">＋ Nueva factura</a>
+                </div></div>
             <div th:if="${successMessage}"
                  class="mt-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800"
                  th:text="${successMessage}"></div>
             <div th:if="${validationErrorMessage}"
                  class="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800"
                  th:text="${validationErrorMessage}"></div>
-            <div class="mt-7 grid gap-7 xl:grid-cols-[minmax(0,1fr)_330px]">
+            <div class="mt-7 grid gap-7 xl:grid-cols-[minmax(0,1fr)_320px]">
                 <section id="invoice-form"
                          class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[.04]">
                     <div class="flex flex-col justify-between gap-5 bg-[#f5f1ec] p-7 md:flex-row md:items-center">
                         <div class="flex items-center gap-4"><span
                                 class="material-symbols-outlined grid h-12 w-12 place-items-center rounded-xl bg-white text-3xl">receipt_long</span>
                             <div><p class="text-xs font-bold uppercase tracking-wide text-[#666]">Documento oficial</p>
-                                <h2 class="text-2xl font-extrabold">Emisión de Nueva Factura</h2></div>
+                                <h2 class="text-xl font-extrabold sm:text-2xl"
+                                    th:text="${invoiceRequest.invoiceId == null ? 'Emisión de Nueva Factura' : 'Edición de Factura'}">Emisión de Nueva Factura</h2></div>
                         </div>
                     </div>
-                    <form class="space-y-9 p-7 md:p-10" th:action="@{/dashboard/invoices}" th:object="${invoiceRequest}"
+                    <form class="space-y-9 p-5 sm:p-7 lg:p-10" th:action="@{/dashboard/invoices}" th:object="${invoiceRequest}"
                           method="post">
+                        <input type="hidden" th:field="*{invoiceId}">
                         <section><h3 class="text-xl font-extrabold uppercase">● &nbsp;Datos de la factura</h3>
-                            <div class="mt-6 grid gap-5 md:grid-cols-2"><div><label class="label">Número de factura</label><input th:field="*{invoiceNumber}" class="field"><p class="error" th:if="${#fields.hasErrors('invoiceNumber')}" th:errors="*{invoiceNumber}"></p></div><div><label class="label">Fecha de emisión</label><input type="date" th:field="*{issueDate}" class="field"><p class="error" th:if="${#fields.hasErrors('issueDate')}" th:errors="*{issueDate}"></p></div></div>
+                            <div class="mt-6 grid gap-5 md:grid-cols-2"><div><label class="label">Número de factura</label><input th:field="*{invoiceNumber}" class="field" th:classappend="${#fields.hasErrors('invoiceNumber')} ? 'border-red-500 ring-2 ring-red-100' : ''"><p class="error" th:if="${#fields.hasErrors('invoiceNumber')}" th:errors="*{invoiceNumber}"></p></div><div><label class="label">Fecha de emisión</label><input type="date" th:field="*{issueDate}" class="field"><p class="error" th:if="${#fields.hasErrors('issueDate')}" th:errors="*{issueDate}"></p></div></div>
                         </section>
                         <section><h3 class="text-xl font-extrabold uppercase">● &nbsp;1. Datos del cliente</h3>
+                            <div class="mt-6">
+                                <label for="frequentClient" class="mb-2 block text-sm font-bold text-[#4b4a48]">Selecciona un cliente guardado</label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#ec5b88]">person_search</span>
+                                    <select id="frequentClient"
+                                            class="w-full cursor-pointer appearance-none rounded-xl border border-[#e9e2da] bg-gradient-to-r from-[#fffdfb] to-[#f7f3ee] py-4 pl-12 pr-12 font-semibold text-[#242321] shadow-sm outline-none transition hover:border-[#d8cfc5] focus:border-[#242321] focus:ring-2 focus:ring-black/10">
+                                        <option value="">Cliente nuevo · introducir datos manualmente</option>
+                                        <option th:each="client : ${frequentClients}"
+                                                th:value="${client.nif}"
+                                                th:text="${client.name + ' · ' + client.nif}"
+                                                th:data-name="${client.name}"
+                                                th:data-nif="${client.nif}"
+                                                th:data-address="${client.address}"
+                                                th:selected="${client.nif == invoiceRequest.clientNif}">Cliente</option>
+                                    </select>
+                                    <span class="material-symbols-outlined pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#666]">expand_more</span>
+                                </div>
+                                <p class="mt-2 flex items-center gap-1.5 text-sm text-[#777]">
+                                    <span class="material-symbols-outlined text-base">info</span>
+                                    Puedes editar los datos autocompletados o escribir un cliente nuevo.
+                                </p>
+                            </div>
                             <div class="mt-6 grid gap-5 md:grid-cols-2">
                                 <div class="md:col-span-2"><label class="label">Razón Social o Nombre del
                                     Cliente</label><input th:field="*{clientName}" class="field"
@@ -125,8 +151,8 @@
                                 <div><label class="label">Dirección Fiscal Completa</label><textarea th:field="*{clientAddress}" rows="3" class="field resize-none"></textarea></div>
                             </div>
                         </section>
-                        <section><div class="flex items-center justify-between"><h3 class="text-xl font-extrabold uppercase">● &nbsp;2. Líneas de factura</h3><button id="addLine" type="button" class="rounded-lg bg-[#f1ede8] px-4 py-2 text-sm font-bold">＋ Añadir línea</button></div>
-                            <div id="invoiceLines" class="mt-6 space-y-4"><div th:each="line, status : *{lines}" class="invoice-line grid gap-3 rounded-xl bg-[#f7f3ee] p-4 md:grid-cols-[1fr_120px_150px_42px]"><div><label class="label">Descripción</label><input th:field="*{lines[__${status.index}__].description}" class="field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].description')}" th:errors="*{lines[__${status.index}__].description}"></p></div><div><label class="label">Cantidad</label><input type="number" min="0.01" step="0.01" th:field="*{lines[__${status.index}__].quantity}" class="line-quantity field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].quantity')}" th:errors="*{lines[__${status.index}__].quantity}"></p></div><div><label class="label">Precio unit. (€)</label><input type="number" min="0" step="0.01" th:field="*{lines[__${status.index}__].unitPrice}" class="line-price field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].unitPrice')}" th:errors="*{lines[__${status.index}__].unitPrice}"></p></div><button type="button" class="remove-line mt-7 rounded-lg p-2 text-[#e44b7c]" title="Eliminar línea"><span class="material-symbols-outlined">delete</span></button></div></div>
+                        <section><div class="flex flex-wrap items-center justify-between gap-3"><h3 class="text-lg font-extrabold uppercase sm:text-xl">● &nbsp;2. Líneas de factura</h3><button id="addLine" type="button" class="rounded-lg bg-[#f1ede8] px-4 py-2 text-sm font-bold">＋ Añadir línea</button></div>
+                            <div id="invoiceLines" class="mt-6 space-y-4"><div th:each="line, status : *{lines}" class="invoice-line grid gap-3 rounded-xl bg-[#f7f3ee] p-4 lg:grid-cols-[minmax(0,1fr)_120px_150px_42px]"><div><label class="label">Descripción o concepto</label><textarea rows="2" th:field="*{lines[__${status.index}__].description}" class="field resize-y bg-white"></textarea><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].description')}" th:errors="*{lines[__${status.index}__].description}"></p></div><div><label class="label">Cantidad</label><input type="number" min="0.01" step="0.01" th:field="*{lines[__${status.index}__].quantity}" class="line-quantity field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].quantity')}" th:errors="*{lines[__${status.index}__].quantity}"></p></div><div><label class="label">Precio unit. (€)</label><input type="number" min="0" step="0.01" th:field="*{lines[__${status.index}__].unitPrice}" class="line-price field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].unitPrice')}" th:errors="*{lines[__${status.index}__].unitPrice}"></p></div><button type="button" class="remove-line mt-7 rounded-lg p-2 text-[#e44b7c]" title="Eliminar línea"><span class="material-symbols-outlined">delete</span></button></div></div>
                             <p class="error" th:if="${#fields.hasErrors('lines')}" th:errors="*{lines}"></p>
                         </section>
                         <section><h3 class="text-xl font-extrabold uppercase">● &nbsp;3. Importes e Impuestos</h3>
@@ -139,18 +165,18 @@
                                     <span>IVA aplicable</span><span>21,00%</span>
                                 </div>
                                 <div class="field flex items-center justify-between font-bold">
-                                    <span>IRPF</span><span>-1,00%</span>
+                                    <span>IRPF</span><span>1,00%</span>
                                 </div>
                             </div>
                         </section>
                         <div class="flex flex-col gap-4 sm:flex-row">
                             <button type="submit"
                                     class="flex flex-1 items-center justify-center gap-3 rounded-xl bg-black px-6 py-4 font-bold text-white shadow-lg">
-                                <span class="material-symbols-outlined">picture_as_pdf</span>Generar y Descargar PDF
+                                <span class="material-symbols-outlined">picture_as_pdf</span>
+                                <span th:text="${invoiceRequest.invoiceId == null ? 'Generar y descargar PDF' : 'Guardar cambios y descargar PDF'}">Generar y descargar PDF</span>
                             </button>
-                            <button type="reset" class="rounded-xl bg-[#f1ede8] px-6 py-4 font-bold"><span
-                                    class="material-symbols-outlined align-middle">bookmark</span> Guardar Borrador
-                            </button>
+                            <a th:if="${invoiceRequest.invoiceId != null}" th:href="@{/dashboard/facturas}"
+                               class="rounded-xl bg-[#f1ede8] px-6 py-4 text-center font-bold">Cancelar</a>
                         </div>
                     </form>
                 </section>
@@ -160,13 +186,13 @@
                                 class="rounded-full bg-[#f1ede8] px-3 py-1 text-xs">EUR €</span></div>
                         <div class="mt-7 rounded-xl bg-[#f5f1ec] p-5">
                             <div class="summary"><span>Base imponible</span><b id="baseSummary">0,00 €</b></div>
-                            <div class="summary"><span>IVA</span><b>21,00%</b></div>
+                            <div class="summary"><span>IVA (21,00%)</span><b>21,00%</b></div>
                             <div class="summary"><span>Total IVA 21%</span><b id="ivaSummary">0,00 €</b></div>
-                            <div class="summary"><span>IRPF</span><b>-1,00%</b></div>
+                            <div class="summary"><span>IRPF (1,00%)</span><b>1,00%</b></div>
                             <div class="summary"><span>Total retenciones</span><b id="retentionsSummary">0,00 €</b></div>
                             <hr class="my-5 border-black/10">
                             <p class="font-bold">TOTAL</p>
-                            <p id="totalSummary" aria-live="polite" class="mt-2 text-right text-4xl font-extrabold text-[#ec5b88]">0,00 €</p></div>
+                            <p id="totalSummary" aria-live="polite" class="total-amount mt-2 text-right text-4xl font-extrabold text-[#ec5b88]">0,00 €</p></div>
                         <div class="mt-6 text-sm leading-6 text-[#666]"><p class="font-bold uppercase">♢ Cumplimiento
                             Veri*Factu</p>
                             <p class="mt-2">Registro inalterable con encadenamiento criptográfico conforme a la
@@ -178,10 +204,14 @@
                         <div class="mt-5 space-y-3"><p th:if="${#lists.isEmpty(recentInvoices)}"
                                                        class="text-sm text-[#666]">Aún no hay facturas emitidas.</p>
                             <article th:each="invoice : ${recentInvoices}" class="rounded-xl bg-white p-4">
-                                <div class="flex justify-between gap-3">
-                                    <div><b th:text="${invoice.invoiceNumber}">FAC-2026-001</b>
-                                        <p class="text-sm text-[#666]" th:text="${invoice.clientName}">Cliente</p></div>
-                                    <b th:text="${invoice.totalAmount + ' €'}">0,00 €</b></div>
+                                <div class="flex flex-wrap items-start justify-between gap-2">
+                                    <div class="min-w-0"><b th:text="${invoice.invoiceNumber}">FAC-2026-001</b>
+                                        <p class="break-words text-sm text-[#666]" th:text="${invoice.clientName}">Cliente</p></div>
+                                    <b class="shrink-0 text-right" th:text="${#numbers.formatDecimal(invoice.totalAmount, 1, 'POINT', 2, 'COMMA') + ' €'}">0,00 €</b>
+                                </div>
+                                <a th:href="@{/dashboard/facturas/{id}/editar(id=${invoice.id})}"
+                                   class="mt-2 inline-block text-sm font-bold underline">Editar</a>
+                                <span class="px-1 text-[#999]">·</span>
                                 <a th:href="@{/dashboard/invoices/{id}/pdf(id=${invoice.id})}"
                                    class="mt-2 inline-block text-sm font-bold underline">Descargar PDF</a></article>
                         </div>
@@ -191,6 +221,18 @@
         </div>
     </main>
 </div>
+<dialog id="duplicateInvoiceDialog" th:if="${duplicateInvoiceMessage}"
+        class="w-[min(92vw,28rem)] rounded-2xl bg-white p-0 shadow-2xl backdrop:bg-black/40">
+    <div class="p-6 sm:p-8">
+        <p class="text-xs font-bold uppercase tracking-[.15em] text-[#e44b7c]">No se pudo guardar</p>
+        <h2 class="mt-2 text-xl font-extrabold">Número de factura duplicado</h2>
+        <p class="mt-3 text-[#555]" th:text="${duplicateInvoiceMessage}"></p>
+        <button id="closeDuplicateInvoiceDialog" type="button"
+                class="mt-6 w-full rounded-xl bg-black px-5 py-3 font-bold text-white">
+            Corregir número
+        </button>
+    </div>
+</dialog>
 <style>.label {
     display: block;
     margin-bottom: .5rem;
@@ -225,7 +267,19 @@
 }
 
 .summary b {
-    color: #242321
+    color: #242321;
+    min-width: 0;
+    max-width: 60%;
+    text-align: right;
+    overflow-wrap: anywhere
+}
+
+.total-amount {
+    max-width: 100%;
+    font-size: clamp(1.5rem, 8vw, 2.25rem);
+    line-height: 1.15;
+    letter-spacing: -.04em;
+    overflow-wrap: anywhere
 }</style>
 <script>
 const layout = document.getElementById('dashboardLayout');
@@ -235,9 +289,21 @@ const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
 const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 const desktopLayout = window.matchMedia('(min-width: 1024px)');
 const lines = document.getElementById('invoiceLines');
+const frequentClient = document.getElementById('frequentClient');
+const clientName = document.getElementById('clientName');
+const clientNif = document.getElementById('clientNif');
+const clientAddress = document.getElementById('clientAddress');
 const VAT_RATE = 21;
 const IRPF_RATE = 1;
 const format = amount => new Intl.NumberFormat('es-ES', {style: 'currency', currency: 'EUR'}).format(amount);
+const duplicateInvoiceDialog = document.getElementById('duplicateInvoiceDialog');
+if (duplicateInvoiceDialog) {
+    duplicateInvoiceDialog.showModal();
+}
+document.getElementById('closeDuplicateInvoiceDialog')?.addEventListener('click', () => {
+    duplicateInvoiceDialog.close();
+    document.getElementById('invoiceNumber').focus();
+});
 function setSidebarExpanded(expanded) {
     if (desktopLayout.matches) {
         layout.classList.toggle('sidebar-collapsed', !expanded);
@@ -250,24 +316,31 @@ function setSidebarExpanded(expanded) {
     sidebarToggle.title = expanded ? 'Ocultar menú' : 'Mostrar menú';
     sidebarToggleIcon.textContent = expanded ? 'menu_open' : 'menu';
 }
+function updateSidebarForViewport() {
+    setSidebarExpanded(desktopLayout.matches && localStorage.getItem('mf-dashboard-sidebar-expanded') === 'true');
+}
+function setSidebarPreference(expanded) {
+    localStorage.setItem('mf-dashboard-sidebar-expanded', String(expanded));
+    setSidebarExpanded(expanded);
+}
 sidebarToggle.addEventListener('click', () => {
-    setSidebarExpanded(sidebarToggle.getAttribute('aria-expanded') !== 'true');
+    setSidebarPreference(sidebarToggle.getAttribute('aria-expanded') !== 'true');
 });
-sidebarBackdrop.addEventListener('click', () => setSidebarExpanded(false));
+sidebarBackdrop.addEventListener('click', () => setSidebarPreference(false));
 document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && !desktopLayout.matches &&
         sidebarToggle.getAttribute('aria-expanded') === 'true') {
-        setSidebarExpanded(false);
+        setSidebarPreference(false);
         sidebarToggle.focus();
     }
 });
 sidebar.querySelector('nav').addEventListener('click', () => {
     if (!desktopLayout.matches) {
-        setSidebarExpanded(false);
+        setSidebarPreference(false);
     }
 });
-desktopLayout.addEventListener('change', () => setSidebarExpanded(desktopLayout.matches));
-setSidebarExpanded(desktopLayout.matches);
+desktopLayout.addEventListener('change', updateSidebarForViewport);
+updateSidebarForViewport();
 function recalculate() {
     const baseCents = [...lines.querySelectorAll('.invoice-line')].reduce((sum, line) => {
         const quantity = parseFloat(line.querySelector('.line-quantity').value) || 0;
@@ -279,13 +352,13 @@ function recalculate() {
     const totalCents = baseCents + vatCents + retentionCents;
     document.getElementById('subtotal').textContent = format(baseCents / 100);
     document.getElementById('baseSummary').textContent = format(baseCents / 100);
-    document.getElementById('ivaSummary').textContent = format(vatCents / 100);
+    document.getElementById('ivaSummary').textContent = format((baseCents + vatCents) / 100);
     document.getElementById('retentionsSummary').textContent = format(retentionCents / 100);
     document.getElementById('totalSummary').textContent = format(totalCents / 100);
 }
 function renumber() {
     [...lines.querySelectorAll('.invoice-line')].forEach((line, index) => {
-        line.querySelectorAll('input').forEach(input => {
+        line.querySelectorAll('input, textarea').forEach(input => {
             input.name = input.name.replace(/^lines\[\d+\]\./, `lines[${index}].`);
             input.id = input.id.replace(/^lines\d+\./, `lines${index}.`);
         });
@@ -293,7 +366,7 @@ function renumber() {
 }
 document.getElementById('addLine').addEventListener('click', () => {
     const index = lines.querySelectorAll('.invoice-line').length;
-    lines.insertAdjacentHTML('beforeend', `<div class="invoice-line grid gap-3 rounded-xl bg-[#f7f3ee] p-4 md:grid-cols-[1fr_120px_150px_42px]"><div><label class="label">Descripción</label><input name="lines[${index}].description" class="field bg-white"></div><div><label class="label">Cantidad</label><input name="lines[${index}].quantity" type="number" min="0.01" step="0.01" value="1" class="line-quantity field bg-white"></div><div><label class="label">Precio unit. (€)</label><input name="lines[${index}].unitPrice" type="number" min="0" step="0.01" value="0" class="line-price field bg-white"></div><button type="button" class="remove-line mt-7 rounded-lg p-2 text-[#e44b7c]"><span class="material-symbols-outlined">delete</span></button></div>`);
+    lines.insertAdjacentHTML('beforeend', `<div class="invoice-line grid gap-3 rounded-xl bg-[#f7f3ee] p-4 lg:grid-cols-[minmax(0,1fr)_120px_150px_42px]"><div><label class="label">Descripción o concepto</label><textarea name="lines[${index}].description" rows="2" class="field resize-y bg-white"></textarea></div><div><label class="label">Cantidad</label><input name="lines[${index}].quantity" type="number" min="0.01" step="0.01" value="1" class="line-quantity field bg-white"></div><div><label class="label">Precio unit. (€)</label><input name="lines[${index}].unitPrice" type="number" min="0" step="0.01" value="0" class="line-price field bg-white"></div><button type="button" class="remove-line mt-7 rounded-lg p-2 text-[#e44b7c]"><span class="material-symbols-outlined">delete</span></button></div>`);
     recalculate();
 });
 lines.addEventListener('input', recalculate);
@@ -304,6 +377,18 @@ lines.addEventListener('click', event => {
     if (button && lines.querySelectorAll('.invoice-line').length > 1) { button.closest('.invoice-line').remove(); renumber(); recalculate(); }
 });
 recalculate();
+frequentClient.addEventListener('change', () => {
+    const option = frequentClient.selectedOptions[0];
+    if (!option.value) {
+        clientName.value = '';
+        clientNif.value = '';
+        clientAddress.value = '';
+        return;
+    }
+    clientName.value = option.dataset.name;
+    clientNif.value = option.dataset.nif;
+    clientAddress.value = option.dataset.address || '';
+});
 </script>
 </body>
 </html>

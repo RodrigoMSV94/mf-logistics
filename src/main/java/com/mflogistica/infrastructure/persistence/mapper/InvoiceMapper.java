@@ -24,7 +24,10 @@ public class InvoiceMapper {
     }
 
     public InvoiceEntity toEntity(Invoice domain) {
-        InvoiceEntity entity = new InvoiceEntity();
+        return updateEntity(domain, new InvoiceEntity());
+    }
+
+    public InvoiceEntity updateEntity(Invoice domain, InvoiceEntity entity) {
         entity.setId(domain.id());
         entity.setInvoiceNumber(domain.invoiceNumber());
         entity.setClientName(domain.clientName());
@@ -38,6 +41,7 @@ public class InvoiceMapper {
         entity.setTotalRetentions(domain.totalRetentions());
         entity.setTotalAmount(domain.totalAmount());
         entity.setConcept(domain.lines().isEmpty() ? "Factura sin líneas" : domain.lines().getFirst().description());
+        entity.getLines().clear();
         domain.lines().forEach(line -> entity.addLine(toEntity(line)));
         return entity;
     }

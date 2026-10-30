@@ -2,6 +2,7 @@ package com.mflogistica.infrastructure.pdf;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
+import com.lowagie.text.Chunk;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
 import com.lowagie.text.FontFactory;
@@ -85,7 +86,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
     }
 
     private void addHeader(Document document, Invoice invoice, Image logo) throws DocumentException {
-        PdfPTable header = new PdfPTable(new float[]{1.25f, 6.35f, 5.4f});
+        PdfPTable header = new PdfPTable(new float[]{1.7f, 5.9f, 5.4f});
         header.setWidthPercentage(100);
         header.setSpacingAfter(16);
 
@@ -94,22 +95,10 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         logoCell.setPadding(0);
         logoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
-        PdfPTable logoFrame = new PdfPTable(1);
-        logoFrame.setTotalWidth(52);
-        logoFrame.setLockedWidth(true);
-        logoFrame.setHorizontalAlignment(Element.ALIGN_LEFT);
-        PdfPCell logoFrameCell = new PdfPCell();
-        logoFrameCell.setFixedHeight(52);
-        logoFrameCell.setBorder(Rectangle.NO_BORDER);
-        logoFrameCell.setPadding(4);
-        logoFrameCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        logoFrameCell.setCellEvent(new RoundedCellEvent(INK, PINK, 10));
         Image headerLogo = Image.getInstance(logo);
-        headerLogo.scaleToFit(43, 43);
+        headerLogo.scaleToFit(68, 68);
         headerLogo.setAlignment(Element.ALIGN_CENTER);
-        logoFrameCell.addElement(headerLogo);
-        logoFrame.addCell(logoFrameCell);
-        logoCell.addElement(logoFrame);
+        logoCell.addElement(headerLogo);
         header.addCell(logoCell);
 
         PdfPCell brandCell = borderlessCell();
@@ -129,10 +118,6 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
                 Element.ALIGN_RIGHT, 4);
         addParagraph(metaCell, "Fecha emisión: " + DATE_FORMAT.format(invoice.issueDate()),
                 font(8.5f, Font.NORMAL, MUTED), Element.ALIGN_RIGHT, 1);
-        addParagraph(metaCell, "Vencimiento: A la vista / Inmediato",
-                font(8.5f, Font.NORMAL, MUTED), Element.ALIGN_RIGHT, 1);
-        addParagraph(metaCell, "Régimen: General IVA (Península)",
-                font(8.5f, Font.NORMAL, MUTED), Element.ALIGN_RIGHT, 0);
         header.addCell(metaCell);
 
         document.add(header);
@@ -210,7 +195,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
             Color rowBackground = lineNumber % 2 == 0 ? SOFT : Color.WHITE;
             addTextCell(items, String.format("%02d", lineNumber), font(8, Font.BOLD, MUTED, FontFactory.COURIER),
                     Element.ALIGN_CENTER, Rectangle.BOTTOM, BORDER, 9, 5, 9, 5, rowBackground);
-            addTextCell(items, line.description(), font(8.5f, Font.BOLD, INK),
+            addMultilineTextCell(items, line.description(), font(8.5f, Font.BOLD, INK),
                     Element.ALIGN_LEFT, Rectangle.BOTTOM, BORDER, 9, 5, 9, 5, rowBackground);
             addTextCell(items, line.quantity().stripTrailingZeros().toPlainString(), font(8, Font.NORMAL, INK),
                     Element.ALIGN_CENTER, Rectangle.BOTTOM, BORDER, 9, 5, 9, 5, rowBackground);
@@ -303,12 +288,14 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
     private PdfPCell totalsCard(Invoice invoice) {
         PdfPTable totals = new PdfPTable(2);
         totals.setWidthPercentage(100);
-        addTotalRow(totals, "BASE\nIMPONIBLE", euro(invoice.subtotal()), false);
-        addTotalRow(totals, "IVA\n(" + percent(invoice.taxRate()) + ")", percent(invoice.taxRate()), false);
-        addTotalRow(totals, "TOTAL IVA\n21%", "+" + euro(invoice.taxAmount()), false);
-        addTotalRow(totals, "IRPF\n(-" + percent(invoice.irpfRate()) + ")",
-                "-" + percent(invoice.irpfRate()), true);
-        addTotalRow(totals, "TOTAL\nRETENCIONES", euro(invoice.totalRetentions()), true);
+        totals.setWidths(new float[]{1.2f, 0.8f});
+        addTotalRow(totals, "BASE IMPONIBLE", euro(invoice.subtotal()), false);
+        addTotalRow(totals, "IVA (" + percent(invoice.taxRate()) + ")", percent(invoice.taxRate()), false);
+        addTotalRow(totals, "TOTAL IVA " + invoice.taxRate().stripTrailingZeros().toPlainString() + "%",
+                euro(invoice.subtotal().add(invoice.taxAmount())), false);
+        addTotalRow(totals, "IRPF (" + percent(invoice.irpfRate()) + ")",
+                percent(invoice.irpfRate()), true);
+        addTotalRow(totals, "TOTAL RETENCIONES", euro(invoice.totalRetentions()), true);
 
         PdfPTable grandTotalContent = new PdfPTable(new float[]{0.72f, 1.28f});
         grandTotalContent.setWidthPercentage(100);
@@ -401,6 +388,34 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
     }
 
     private void addStyledCell(PdfPTable table, PdfPCell cell) {
+        table.addCell(cell);
+    }
+
+    private void addMultilineTextCell(PdfPTable table, String text, Font font, int alignment, int border,
+                                      Color borderColor, float paddingTop, float paddingRight,
+                                      float paddingBottom, float paddingLeft, Color background) {
+        Phrase phrase = new Phrase();
+        String[] lines = text.split("\\R", -1);
+        for (int index = 0; index < lines.length; index++) {
+            if (index > 0) {
+                phrase.add(Chunk.NEWLINE);
+            }
+            phrase.add(new Chunk(lines[index], font));
+        }
+        PdfPCell cell = new PdfPCell(phrase);
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setBorder(border);
+        if (borderColor != null) {
+            cell.setBorderColor(borderColor);
+        }
+        if (background != null) {
+            cell.setBackgroundColor(background);
+        }
+        cell.setPaddingTop(paddingTop);
+        cell.setPaddingRight(paddingRight);
+        cell.setPaddingBottom(paddingBottom);
+        cell.setPaddingLeft(paddingLeft);
         table.addCell(cell);
     }
 

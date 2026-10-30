@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+    <changeSet id="20261030-01-create-clients" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="clients"/>
+            </not>
+        </preConditions>
+        <createTable tableName="clients">
+            <column name="client_nif" type="varchar(20)">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_clients"/>
+            </column>
+            <column name="client_name" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_address" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="20261030-02-seed-default-client" author="copilot">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM clients WHERE client_nif = '73025558Y'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <insert tableName="clients">
+            <column name="client_nif" value="73025558Y"/>
+            <column name="client_name" value="SAÚL GUERRERO LÓPEZ"/>
+            <column name="client_address"
+                    value="Contrato Logístico Operativo&#10;Carrer Comanegra, 3&#10;17252 Calonge (Girona, España)"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
