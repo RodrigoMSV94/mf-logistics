@@ -1,26 +1,26 @@
 package com.mflogistica.infrastructure.persistence.mapper;
 
 import com.mflogistica.domain.model.Invoice;
+import com.mflogistica.domain.model.InvoiceLine;
 import com.mflogistica.infrastructure.persistence.entity.InvoiceEntity;
+import com.mflogistica.infrastructure.persistence.entity.InvoiceLineEntity;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @Component
 public class InvoiceMapper {
 
     public Invoice toDomain(InvoiceEntity entity) {
-        return new Invoice(
-                entity.getId(),
-                entity.getInvoiceNumber(),
-                entity.getClientName(),
-                entity.getClientNif(),
-                entity.getClientAddress(),
-                entity.getIssueDate(),
-                entity.getSubtotal(),
-                entity.getTaxRate(),
-                entity.getTaxAmount(),
-                entity.getTotalAmount(),
-                entity.getConcept()
-        );
+        List<InvoiceLine> lines = entity.getLines().stream()
+                .map(line -> new InvoiceLine(line.getId(), line.getDescription(), line.getQuantity(),
+                        line.getUnitPrice(), line.getTotalAmount()))
+                .toList();
+        return new Invoice(entity.getId(), entity.getInvoiceNumber(), entity.getClientName(), entity.getClientNif(),
+                entity.getClientAddress(), entity.getIssueDate(), entity.getSubtotal(), entity.getTaxRate(),
+                entity.getTaxAmount(), valueOrZero(entity.getIrpfRate()), valueOrZero(entity.getTotalRetentions()),
+                entity.getTotalAmount(), lines);
     }
 
     public InvoiceEntity toEntity(Invoice domain) {
@@ -34,9 +34,25 @@ public class InvoiceMapper {
         entity.setSubtotal(domain.subtotal());
         entity.setTaxRate(domain.taxRate());
         entity.setTaxAmount(domain.taxAmount());
+        entity.setIrpfRate(domain.irpfRate());
+        entity.setTotalRetentions(domain.totalRetentions());
         entity.setTotalAmount(domain.totalAmount());
-        entity.setConcept(domain.concept());
+        entity.setConcept(domain.lines().isEmpty() ? "Factura sin líneas" : domain.lines().getFirst().description());
+        domain.lines().forEach(line -> entity.addLine(toEntity(line)));
         return entity;
     }
-}
 
+    private InvoiceLineEntity toEntity(InvoiceLine line) {
+        InvoiceLineEntity entity = new InvoiceLineEntity();
+        entity.setId(line.id());
+        entity.setDescription(line.description());
+        entity.setQuantity(line.quantity());
+        entity.setUnitPrice(line.unitPrice());
+        entity.setTotalAmount(line.totalAmount());
+        return entity;
+    }
+
+    private BigDecimal valueOrZero(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
+    }
+}

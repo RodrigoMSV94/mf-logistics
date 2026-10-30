@@ -1,0 +1,821 @@
+<!DOCTYPE html><html lang="es" style=""><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factura Oficial 2026-SGL-02 | MF Logística</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #0f1115;
+      --paper: #ffffff;
+      --ink: #111418;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --soft-surface: #f8fafc;
+      --accent-pink: #ee5283;
+      --accent-pink-soft: rgba(238, 82, 131, 0.08);
+      --dark-card: #111418;
+      --sand-tint: #fbf9f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--ink);
+      line-height: 1.45;
+      padding: 40px 16px 80px;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Barra flotante de acciones (no sale al imprimir) */
+    .action-toolbar {
+      width: 210mm;
+      max-width: 100%;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(26, 30, 38, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 12px 20px;
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .action-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: #e2e8f0;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(238, 82, 131, 0.18);
+      border: 1px solid rgba(238, 82, 131, 0.4);
+      color: #ff759f;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge-status::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ee5283;
+      box-shadow: 0 0 8px #ee5283;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn-print {
+      background: #ffffff;
+      color: #0f1115;
+    }
+
+    .btn-print:hover {
+      background: #f1f5f9;
+      transform: translateY(-1px);
+    }
+
+    .btn-pdf {
+      background: #ee5283;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(238, 82, 131, 0.35);
+    }
+
+    .btn-pdf:hover {
+      background: #e03b70;
+      transform: translateY(-1px);
+    }
+
+    /* Hoja A4 estándar para factura */
+    .invoice-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      background: var(--paper);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      padding: 16mm 16mm 14mm;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Franja de identidad superior estilizada */
+    .top-accent-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #111418 0%, #ee5283 55%, #111418 100%);
+    }
+
+    /* Encabezado */
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 20px;
+      border-bottom: 1.5px solid #edf2f7;
+      margin-bottom: 22px;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo-frame {
+      width: 72px;
+      height: 72px;
+      background: #111418;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      box-shadow: 0 8px 20px rgba(17, 20, 24, 0.15);
+      border: 1px solid rgba(238, 82, 131, 0.3);
+    }
+
+    .brand-logo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-title h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #111418;
+      line-height: 1.1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-tag {
+      font-size: 10px;
+      padding: 2px 7px;
+      background: var(--accent-pink-soft);
+      color: var(--accent-pink);
+      border: 1px solid rgba(238, 82, 131, 0.25);
+      border-radius: 999px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .brand-title p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .invoice-meta-right {
+      text-align: right;
+    }
+
+    .doc-type-pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .invoice-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 800;
+      color: #111418;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .invoice-dates {
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 11.5px;
+      color: #64748b;
+    }
+
+    .invoice-dates strong {
+      color: #111418;
+      font-weight: 600;
+    }
+
+    /* Grid de Emisor y Receptor */
+    .party-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .party-card {
+      background: var(--sand-tint);
+      border: 1px solid #f0eae1;
+      border-radius: 12px;
+      padding: 14px 16px;
+      position: relative;
+    }
+
+    .party-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .party-role {
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #8a7b6c;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .party-role svg {
+      color: var(--accent-pink);
+    }
+
+    .party-nif-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      background: #ffffff;
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid #e7ded4;
+      color: #111418;
+    }
+
+    .party-name {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #111418;
+      margin-bottom: 4px;
+      letter-spacing: -0.01em;
+    }
+
+    .party-details {
+      font-size: 11.5px;
+      color: #555e6d;
+      line-height: 1.5;
+    }
+
+    .party-details strong {
+      color: #111418;
+    }
+
+    /* Banner de contexto logístico (detalle moderno para transporte) */
+    .logistics-bar {
+      background: #111418;
+      color: #ffffff;
+      border-radius: 10px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      font-size: 11.5px;
+    }
+
+    .route-spec {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .route-node {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .route-arrow {
+      color: var(--accent-pink);
+      font-weight: 900;
+    }
+
+    .route-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: #94a3b8;
+    }
+
+    .route-pill {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: #f1f5f9;
+    }
+
+    /* Tabla de Conceptos */
+    .items-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-bottom: 20px;
+    }
+
+    .items-table th {
+      background: #f8fafc;
+      color: #475569;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 9px 12px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1.5px solid var(--border);
+      text-align: left;
+    }
+
+    .items-table th:first-child {
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    .items-table th:last-child {
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+
+    .items-table th.tar,
+    .items-table td.tar {
+      text-align: right;
+    }
+
+    .items-table th.tac,
+    .items-table td.tac {
+      text-align: center;
+    }
+
+    .items-table td {
+      padding: 14px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 12px;
+      vertical-align: top;
+    }
+
+    .item-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+
+    .item-desc-title {
+      font-weight: 700;
+      color: #111418;
+      font-size: 12.5px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .item-desc-body {
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.45;
+      max-width: 95%;
+    }
+
+    .item-tags {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .mini-tag {
+      font-size: 9.5px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .amount-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #111418;
+      font-size: 12.5px;
+      white-space: nowrap;
+    }
+
+    /* Sección inferior: Datos bancarios + Totales */
+    .summary-section {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 24px;
+    }
+
+    .bank-card {
+      background: var(--sand-tint);
+      border: 1px solid #f0eae1;
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .bank-header {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #8a7b6c;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .bank-name {
+      font-weight: 700;
+      color: #111418;
+      font-size: 12px;
+    }
+
+    .iban-box {
+      background: #ffffff;
+      border: 1px dashed #dcd4c9;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .iban-label {
+      font-size: 10px;
+      color: #8a7b6c;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .iban-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #111418;
+      letter-spacing: 0.04em;
+    }
+
+    .bank-notes {
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    .totals-box {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 14px;
+      font-size: 11.5px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #475569;
+    }
+
+    .totals-row.negative {
+      color: #dc2626;
+    }
+
+    .totals-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #111418;
+      font-size: 12px;
+    }
+
+    .totals-row.negative .totals-val {
+      color: #dc2626;
+    }
+
+    .grand-total {
+      background: #111418;
+      color: #ffffff;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .grand-total-label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #cbd5e1;
+    }
+
+    .grand-total-sub {
+      font-size: 9.5px;
+      color: #ee5283;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .grand-total-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    /* Módulo Veri*Factu / Ley Antifraude española */
+    .verifactu-footer {
+      margin-top: auto;
+      border-top: 1.5px solid #edf2f7;
+      padding-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .verifactu-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .qr-container {
+      width: 58px;
+      height: 58px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qr-container svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .verifactu-text {
+      font-size: 10px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    .verifactu-title {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #111418;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .verifactu-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+
+    .verifactu-hash {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      color: #334155;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .legal-signature-box {
+      text-align: right;
+      font-size: 9.5px;
+      color: #94a3b8;
+      max-width: 210px;
+      line-height: 1.35;
+    }
+
+    .legal-signature-box strong {
+      color: #475569;
+    }
+
+    /* ESTILOS DE IMPRESIÓN Y DESCARGA LIMPIA */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+
+      body {
+        background: #ffffff !important;
+        padding: 0 !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .action-toolbar {
+        display: none !important;
+      }
+
+      .invoice-sheet {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        min-height: 297mm !important;
+        padding: 12mm 14mm 10mm !important;
+      }
+    }
+  </style>
+</head>
+<body style="background-color: rgb(255, 255, 255); margin: 0px; padding: 0px; width: 100%; min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Barra superior no imprimible para descargar o mandar a imprimir directamente -->
+  
+
+  <!-- Documento Oficial descargado (Hoja A4 limpia) -->
+  <main class="invoice-sheet" id="invoice" style="width: 100%; max-width: 100%; min-height: 100vh; box-shadow: none; border-radius: 0px; padding: 24px 32px 0px; margin: 0px;">
+    <div class="top-accent-bar"></div>
+
+    <!-- Encabezado corporativo -->
+    <header class="invoice-header">
+      <div class="brand-block">
+        <div class="brand-logo-frame">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvqtCbm8foTWLfYBMjoSaL95aMLx1fmvvZLziQzlPVcY5Jk1DX2bY4FoQiNgUs5vkH1r7bHEPPbr7wFrKk9VUr2sDwYYdX0Ar3_UfwbXFRpSwQkCqRWEEuqFk6jvSiSoDOF1JnZf6JrVGjmxawl7x5jY7J0za3fmIve5MiBM4e_qlnBERYeOL0mSL57EFlyvzJ7kNCk09rqv4KckLHxXNBRbICrDNIt0QvkJwnWdLfmbJjDDdU6DlwDw" alt="MF Logística">
+        </div>
+        <div class="brand-title">
+          <h1 class="">MF LOGÍSTICA </h1>
+          <p class="">Operatividad integral de paquetería</p>
+        </div>
+      </div>
+      <div class="invoice-meta-right">
+        <span class="doc-type-pill">Factura Ordinaria de Servicios</span>
+        <div class="invoice-number">2026-SGL-02</div>
+        <div class="invoice-dates">
+          <span class="">Fecha Emisión: <strong>28 / 10 / 2026</strong></span>
+          <span class="">Vencimiento: <strong>A la vista / Inmediato</strong></span>
+          <span class="">Régimen: <strong>General IVA (Península)</strong></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Datos Fiscales: Emisor y Cliente -->
+    <section class="party-grid" aria-label="Identificación Fiscal de las Partes">
+      <!-- Emisor -->
+      <article class="party-card">
+        <div class="party-header">
+          <span class="party-role">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+            Emisor / Prestador
+          </span>
+          <span class="party-nif-badge">NIF Y8023499D</span>
+        </div>
+        <div class="party-name">MARTHA DENISSE CARRILLO TOVAR</div>
+        <div class="party-details">
+          MF LOGÍSTICA<br>
+          Carrer del Pintor Huguet, 1<br>
+          17310 Lloret de Mar (Girona, España)<br>
+          Teléfono: <strong>+34 664 008 020</strong><br>
+          Email: <strong>denissecarrillo1986@gmail.com</strong>
+        </div>
+      </article>
+
+      <!-- Receptor -->
+      <article class="party-card">
+        <div class="party-header">
+          <span class="party-role">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            Destinatario / Cliente
+          </span>
+          <span class="party-nif-badge">NIF 73025558Y</span>
+        </div>
+        <div class="party-name">SAÚL GUERRERO LÓPEZ</div>
+        <div class="party-details">Contrato Logístico Operativo<br class="">Carrer Comanegra, 3<br class="">17252 Calonge (Girona, España)</div>
+      </article>
+    </section>
+
+    <!-- Contexto Logístico de Servicio -->
+    
+
+    <!-- Desglose de Operaciones y Servicios -->
+    <table class="items-table" aria-label="Líneas de facturación">
+      <thead>
+        <tr>
+          <th style="width: 6%;" class="">Lín.</th>
+          <th style="width: 54%;" class="">Descripción Técnica del Servicio</th>
+          <th class="tac" style="width: 12%;">Unidad</th>
+          <th class="tar" style="width: 13%;">Precio Unit.</th>
+          <th class="tar" style="width: 15%;">Base Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="item-num">01</td>
+          <td class=""><div class="item-desc-title" style="margin-bottom: 0px;">SERVICIOS DE REPARTO PAQUETERÍA</div></td>
+          <td class="tac" style="font-weight: 600; color: rgb(17, 20, 24);">1</td>
+          <td class="tar amount-cell">5.467,15 €</td>
+          <td class="tar amount-cell">5.467,15 €</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Resumen Financiero y Pago -->
+    <section class="summary-section" style="margin-top: auto; margin-bottom: 24px; align-items: flex-end;">
+      <!-- Datos Bancarios y Liquidación -->
+      <div class="bank-card">
+        <div class="bank-header">
+          <span class="">Modalidad de Pago</span>
+          <span class="bank-name">CaixaBank España</span>
+        </div>
+        <div class="iban-box">
+          <div class="iban-label">Código Internacional de Cuenta (IBAN)</div>
+          <div class="iban-value">ES50 2100 8137 8902 0047 3817</div>
+        </div>
+        <p class="bank-notes"><strong class="">Beneficiario:</strong> MARTHA DENISSE CARRILLO TOVAR</p>
+      </div>
+
+      <!-- Cuadro de Impuestos y Total -->
+      <div class="totals-box"><div class="totals-row"><span class="">BASE IMPONIBLE</span><span class="totals-val">5.467,15 €</span></div><div class="totals-row"><span class="">IVA (21,00%)</span><span class="totals-val">21,00%</span></div><div class="totals-row"><span class="">TOTAL IVA 21%</span><span class="totals-val">+1.148,10 €</span></div><div class="totals-row negative"><span class="">IRPF (-1,00%)</span><span class="totals-val">-1,00%</span></div><div class="totals-row negative"><span class="">TOTAL RETENCIONES</span><span class="totals-val">-54,67 €</span></div><div class="grand-total"><div><div class="grand-total-label">TOTAL</div><div class="grand-total-sub">Total a Liquidar</div></div><div class="grand-total-val">6.560,58 €</div></div></div>
+    </section>
+
+    <!-- Verificación Electrónica Fiscal (Ley 11/2021 Veri*Factu) -->
+    <footer style="margin: auto -32px 0px; background-color: rgb(0, 0, 0); padding: 8px 0px; display: flex; align-items: center; justify-content: center; height: 100px; box-sizing: border-box; width: calc(100% + 64px);" class=""><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmzW3nKe0lO0A8AvtxuSxeC4SPYnPj02BdeuRz64upPDmD3AFS_muUHE9JxUyHL4Oi5a_xYP5WFhZx1xmRAVxVC-Y680ToLGApoeSS-jvih8m6hx-4krn5KnwRNR_3cxvKsewRtN1B4CquEf_5tEAyZVaKtPCH06LxEiZBpqsC_lWmNDGWXBhHCpVY1x4fDc_i2_vH-aup1wyrwVecdw1ybC3B1Cgn51S7rrJGG6pU7hsmug60Ut8vzE1N-JEAtGuEUAZzAPtdq5Ccmso" alt="MF Logística" style="height: 84px; max-height: 88px; width: auto; object-fit: contain; display: block;" class=""></footer>
+  </main>
+
+
+
+
+
+
+
+
+</body></html>

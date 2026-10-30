@@ -2,6 +2,7 @@ package com.mflogistica.domain.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 public record Invoice(
         Long id,
@@ -13,8 +14,9 @@ public record Invoice(
         BigDecimal subtotal,
         BigDecimal taxRate,
         BigDecimal taxAmount,
+        BigDecimal irpfRate,
+        BigDecimal totalRetentions,
         BigDecimal totalAmount,
-        String concept
+        List<InvoiceLine> lines
 ) {
 }
-

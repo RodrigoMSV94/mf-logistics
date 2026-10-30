@@ -1,38 +1,98 @@
 package com.mflogistica.application.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Digits;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
-public record InvoiceRequestDto(
-        @NotBlank(message = "El nombre del cliente es obligatorio")
-        @Size(max = 120, message = "El nombre del cliente no puede superar 120 caracteres")
-        String clientName,
+@Getter
+public class InvoiceRequestDto {
 
-        @NotBlank(message = "El NIF/CIF del cliente es obligatorio")
-        @Size(max = 20, message = "El NIF/CIF no puede superar 20 caracteres")
-        String clientNif,
+    @NotBlank(message = "El número de factura es obligatorio")
+    @Size(max = 20, message = "El número de factura no puede superar 20 caracteres")
+    private String invoiceNumber;
 
-        @Size(max = 255, message = "La direccion no puede superar 255 caracteres")
-        String clientAddress,
+    @NotNull(message = "La fecha de emisión es obligatoria")
+    private LocalDate issueDate;
 
-        @NotBlank(message = "El concepto es obligatorio")
-        @Size(max = 255, message = "El concepto no puede superar 255 caracteres")
-        String concept,
+    @NotBlank(message = "El nombre del cliente es obligatorio")
+    @Size(max = 120, message = "El nombre del cliente no puede superar 120 caracteres")
+    private String clientName;
 
-        @NotNull(message = "La base imponible es obligatoria")
-        @DecimalMin(value = "0.01", message = "La base imponible debe ser mayor que 0")
-        @Digits(integer = 12, fraction = 2, message = "La base imponible debe tener maximo 2 decimales")
-        BigDecimal subtotal,
+    @NotBlank(message = "El NIF/CIF del cliente es obligatorio")
+    @Size(max = 20, message = "El NIF/CIF no puede superar 20 caracteres")
+    private String clientNif;
 
-        @NotNull(message = "El tipo de IVA es obligatorio")
-        @DecimalMin(value = "0.00", message = "El IVA no puede ser negativo")
-        @Digits(integer = 3, fraction = 2, message = "El IVA no tiene formato valido")
-        BigDecimal taxRate
-) {
+    @Size(max = 255, message = "La dirección no puede superar 255 caracteres")
+    private String clientAddress;
+
+    @NotEmpty(message = "Añade al menos una línea de factura")
+    private List<@Valid InvoiceLineRequestDto> lines = new ArrayList<>();
+
+    public InvoiceRequestDto() {
+    }
+
+    public InvoiceRequestDto(String invoiceNumber, LocalDate issueDate, String clientName, String clientNif,
+                             String clientAddress, List<InvoiceLineRequestDto> lines) {
+        this.invoiceNumber = invoiceNumber;
+        this.issueDate = issueDate;
+        this.clientName = clientName;
+        this.clientNif = clientNif;
+        this.clientAddress = clientAddress;
+        this.lines = new ArrayList<>(lines);
+    }
+
+    public String invoiceNumber() {
+        return invoiceNumber;
+    }
+
+    public LocalDate issueDate() {
+        return issueDate;
+    }
+
+    public String clientName() {
+        return clientName;
+    }
+
+    public String clientNif() {
+        return clientNif;
+    }
+
+    public String clientAddress() {
+        return clientAddress;
+    }
+
+    public List<InvoiceLineRequestDto> lines() {
+        return lines;
+    }
+
+    public void setInvoiceNumber(String invoiceNumber) {
+        this.invoiceNumber = invoiceNumber;
+    }
+
+    public void setIssueDate(LocalDate issueDate) {
+        this.issueDate = issueDate;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
+    }
+
+    public void setClientNif(String clientNif) {
+        this.clientNif = clientNif;
+    }
+
+    public void setClientAddress(String clientAddress) {
+        this.clientAddress = clientAddress;
+    }
+
+    public void setLines(List<InvoiceLineRequestDto> lines) {
+        this.lines = lines == null ? new ArrayList<>() : new ArrayList<>(lines);
+    }
 }
-

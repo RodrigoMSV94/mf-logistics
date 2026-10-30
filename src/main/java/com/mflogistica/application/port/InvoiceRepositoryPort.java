@@ -14,5 +14,7 @@ public interface InvoiceRepositoryPort {
     List<Invoice> findRecent(int limit);
 
     long countByYear(int year);
+
+    boolean existsByInvoiceNumber(String invoiceNumber);
 }
 

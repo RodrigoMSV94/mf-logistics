@@ -7,6 +7,7 @@ import com.mflogistica.infrastructure.persistence.mapper.InvoiceMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,7 +42,13 @@ public class InvoiceRepositoryAdapter implements InvoiceRepositoryPort {
 
     @Override
     public long countByYear(int year) {
-        return springDataInvoiceRepository.countByIssueYear(year);
+        LocalDate startDate = LocalDate.of(year, 1, 1);
+        return springDataInvoiceRepository.countByIssueDateGreaterThanEqualAndIssueDateLessThan(
+                startDate, startDate.plusYears(1));
+    }
+
+    @Override
+    public boolean existsByInvoiceNumber(String invoiceNumber) {
+        return springDataInvoiceRepository.existsByInvoiceNumber(invoiceNumber);
     }
 }
-

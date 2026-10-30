@@ -3,50 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso interno | MF Logistica</title>
+    <title>Acceso interno | MF Logística</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+    <style>body {
+        font-family: 'Plus Jakarta Sans', sans-serif
+    }
+
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 500
+    }</style>
 </head>
-<body class="bg-[#fdf9f4] min-h-screen flex items-center justify-center px-6">
-<div class="w-full max-w-md rounded-2xl border border-black/10 bg-white p-8 shadow-sm">
-    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#e44b7c]">Acceso exclusivo socios</p>
-    <h1 class="mt-3 text-3xl font-bold text-black">Portal de Gestion Interna</h1>
-    <p class="mt-2 text-sm text-black/70">Inicia sesion para administrar facturacion y documentos.</p>
-
-    <div th:if="${param.error}" class="mt-4 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
-        Usuario o contrasena incorrectos.
+<body class="min-h-screen bg-[#fdf9f4] px-5 py-12 text-[#222] sm:grid sm:place-items-center">
+<main class="w-full max-w-xl rounded-2xl bg-white px-8 py-12 shadow-[0_20px_40px_rgba(40,35,30,.12)] sm:px-12">
+    <div class="text-center"><img th:src="@{/images/mf-logo-black.png}" src="/images/mf-logo-black.png"
+                                  alt="MF Logística" class="mx-auto h-20 w-20 rounded-xl object-cover">
+        <p class="mt-6 inline-flex items-center gap-2 rounded-full bg-[#f1ede8] px-4 py-2 text-xs font-bold uppercase tracking-wide text-[#555]">
+            <i class="h-2 w-2 rounded-full bg-[#ec5b88]"></i>Acceso exclusivo socios &amp; administración</p>
+        <h1 class="mt-5 text-3xl font-extrabold tracking-tight">Portal de Gestión Interna</h1>
+        <p class="mt-3 text-[#666]">Acceso restringido únicamente a propietarios y administradores del negocio.</p>
     </div>
-    <div th:if="${param.logout}" class="mt-4 rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-700">
-        Sesion cerrada correctamente.
+    <div th:if="${param.error}" class="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        Usuario o contraseña incorrectos.
     </div>
-
-    <form class="mt-6 space-y-4" method="post" th:action="@{/login}">
+    <div th:if="${param.logout}"
+         class="mt-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">Sesión cerrada
+        correctamente.
+    </div>
+    <form class="mt-8 space-y-6" method="post" th:action="@{/login}">
         <div>
-            <label for="username" class="text-sm font-semibold text-black">Email</label>
-            <input id="username" name="username" type="email" required
-                   class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2 focus:border-black focus:outline-none"
-                   placeholder="admin@mflogistica.es">
+            <div class="mb-2 flex justify-between"><label for="username" class="font-bold">Usuario o Correo
+                Electrónico</label><span class="text-sm text-[#777]">Requerido</span></div>
+            <div class="relative"><span class="material-symbols-outlined absolute left-4 top-3 text-[#888]">badge</span><input
+                    id="username" name="username" type="email" required placeholder="admin@mflogistica.es"
+                    class="w-full rounded-xl bg-[#f5f1ec] py-3 pl-12 pr-4 outline-none ring-[#222] focus:ring-2"></div>
         </div>
         <div>
-            <label for="password" class="text-sm font-semibold text-black">Contrasena</label>
-            <input id="password" name="password" type="password" required
-                   class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2 focus:border-black focus:outline-none"
-                   placeholder="********">
+            <div class="mb-2 flex justify-between"><label for="password" class="font-bold">Contraseña</label><span
+                    class="text-sm font-semibold text-[#ec5b88]">¿Olvidó su clave?</span></div>
+            <div class="relative"><span
+                    class="material-symbols-outlined absolute left-4 top-3 text-[#888]">lock</span><input id="password"
+                                                                                                          name="password"
+                                                                                                          type="password"
+                                                                                                          required
+                                                                                                          placeholder="••••••••••••"
+                                                                                                          class="w-full rounded-xl bg-[#f5f1ec] py-3 pl-12 pr-4 outline-none ring-[#222] focus:ring-2">
+            </div>
         </div>
-        <label class="flex items-center gap-2 text-sm text-black/70">
-            <input type="checkbox" name="remember-me" class="h-4 w-4 rounded border-black/20">
-            Recordar sesion en este dispositivo
-        </label>
-        <button type="submit" class="w-full rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white">
-            Ingresar al portal
-        </button>
+        <label class="flex items-center gap-3 text-[#555]"><input type="checkbox" name="remember-me"
+                                                                  class="h-5 w-5 rounded border-0 bg-[#f1ede8]">Recordar
+            sesión en este dispositivo</label>
+        <button type="submit"
+                class="flex w-full items-center justify-center gap-2 rounded-xl bg-black py-4 font-bold text-white shadow-lg">
+            Ingresar al Portal <span class="material-symbols-outlined">arrow_forward</span></button>
     </form>
-</div>
+    <div class="mt-10 rounded-xl bg-[#f7f4f0] px-6 py-5 text-center text-sm text-[#666]"><span
+            class="material-symbols-outlined float-left">help</span>
+        <p>¿Problemas de acceso? Contacta con<br><b class="text-[#222]">soporte@mflogistica.es</b></p>
+        <p class="mt-4 inline-flex rounded-full bg-white px-3 py-1"><i
+                class="mr-2 h-3 w-3 rounded-full bg-[#ec5b88]"></i>Conexión segura cifrada TLS 1.3</p></div>
+</main>
+<footer class="mt-7 text-center text-sm text-[#777]">• MF Logística Internacional S.L. <span class="mx-5">•</span>
+    Terminal de Control Central
+</footer>
 </body>
 </html>
-

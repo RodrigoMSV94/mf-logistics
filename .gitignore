@@ -40,6 +40,7 @@ Thumbs.db
 .env.*
 application-local.yml
 application-*.local.yml
+application-*.example.yml
 
 # Maven wrapper cache (keep wrapper scripts/jar if you add them)
 .mvn/wrapper/maven-wrapper.jar

@@ -5,11 +5,19 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "invoices")
 public class InvoiceEntity {
@@ -42,98 +50,28 @@ public class InvoiceEntity {
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal taxAmount;
 
+    @Column(precision = 5, scale = 2)
+    private BigDecimal irpfRate;
+
+    @Column(precision = 14, scale = 2)
+    private BigDecimal totalRetentions;
+
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal totalAmount;
 
     @Column(nullable = false, length = 255)
     private String concept;
 
-    public Long getId() {
-        return id;
+    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InvoiceLineEntity> lines = new ArrayList<>();
+
+    public void setLines(List<InvoiceLineEntity> lines) {
+        this.lines.clear();
+        lines.forEach(this::addLine);
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getInvoiceNumber() {
-        return invoiceNumber;
-    }
-
-    public void setInvoiceNumber(String invoiceNumber) {
-        this.invoiceNumber = invoiceNumber;
-    }
-
-    public String getClientName() {
-        return clientName;
-    }
-
-    public void setClientName(String clientName) {
-        this.clientName = clientName;
-    }
-
-    public String getClientNif() {
-        return clientNif;
-    }
-
-    public void setClientNif(String clientNif) {
-        this.clientNif = clientNif;
-    }
-
-    public String getClientAddress() {
-        return clientAddress;
-    }
-
-    public void setClientAddress(String clientAddress) {
-        this.clientAddress = clientAddress;
-    }
-
-    public LocalDate getIssueDate() {
-        return issueDate;
-    }
-
-    public void setIssueDate(LocalDate issueDate) {
-        this.issueDate = issueDate;
-    }
-
-    public BigDecimal getSubtotal() {
-        return subtotal;
-    }
-
-    public void setSubtotal(BigDecimal subtotal) {
-        this.subtotal = subtotal;
-    }
-
-    public BigDecimal getTaxRate() {
-        return taxRate;
-    }
-
-    public void setTaxRate(BigDecimal taxRate) {
-        this.taxRate = taxRate;
-    }
-
-    public BigDecimal getTaxAmount() {
-        return taxAmount;
-    }
-
-    public void setTaxAmount(BigDecimal taxAmount) {
-        this.taxAmount = taxAmount;
-    }
-
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
-    public String getConcept() {
-        return concept;
-    }
-
-    public void setConcept(String concept) {
-        this.concept = concept;
+    public void addLine(InvoiceLineEntity line) {
+        line.setInvoice(this);
+        this.lines.add(line);
     }
 }
-

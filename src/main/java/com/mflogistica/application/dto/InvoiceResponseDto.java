@@ -12,8 +12,9 @@ public record InvoiceResponseDto(
         BigDecimal subtotal,
         BigDecimal taxRate,
         BigDecimal taxAmount,
+        BigDecimal irpfRate,
+        BigDecimal totalRetentions,
         BigDecimal totalAmount,
         String concept
 ) {
 }
-

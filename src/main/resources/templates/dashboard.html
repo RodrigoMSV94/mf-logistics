@@ -3,97 +3,307 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | MF Logistica</title>
+    <title>Facturación | MF Logística</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 500
+        }
+
+        #dashboardLayout {
+            transition: grid-template-columns 200ms ease
+        }
+
+        #dashboardSidebar {
+            min-width: 0;
+            transition: padding 200ms ease, transform 200ms ease, visibility 200ms ease
+        }
+
+        @media (min-width: 1024px) {
+            #dashboardLayout.sidebar-collapsed {
+                grid-template-columns: 0 minmax(0, 1fr)
+            }
+
+            #dashboardLayout.sidebar-collapsed #dashboardSidebar {
+                visibility: hidden;
+                overflow: hidden;
+                padding-left: 0;
+                padding-right: 0;
+                border: 0
+            }
+        }
     </style>
 </head>
-<body class="bg-[#fdf9f4] text-[#31302d] min-h-screen">
-<div class="mx-auto max-w-7xl px-6 py-8">
-    <header class="flex items-center justify-between mb-8">
-        <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#e44b7c]">Terminal Administrativo</p>
-            <h1 class="text-3xl font-bold text-black mt-2">Modulo de Facturacion</h1>
+<body class="bg-[#fdf9f4] text-[#242321]">
+<div id="dashboardLayout" class="min-h-screen lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
+    <aside id="dashboardSidebar"
+           class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col border-r border-black/[.04] bg-[#f9f6f2] p-6 lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 lg:p-8">
+        <a th:href="@{/}" class="flex items-center gap-3">
+            <img th:src="@{/images/mf-logo-light.png}" src="/images/mf-logo-light.png" alt="MF"
+                 class="h-11 w-11 rounded-lg object-cover">
+            <b class="text-xl">MF ADMIN</b>
+        </a>
+        <nav class="mt-14 space-y-3 text-lg text-[#555]">
+            <a href="#invoice-form"
+               class="flex items-center gap-4 rounded-lg bg-[#f1ede8] px-4 py-3 font-bold text-[#222]">
+                <span class="material-symbols-outlined">receipt_long</span>Facturación
+            </a>
+        </nav>
+        <div class="mt-auto flex items-center gap-3 rounded-xl bg-[#f1ede8] p-4 text-sm">
+            <span class="material-symbols-outlined grid h-10 w-10 place-items-center rounded-full bg-black text-white">person</span>
+            <span><b>Administración</b><br>fiscal@mflogistica.es</span>
         </div>
-        <form method="post" th:action="@{/logout}">
-            <button type="submit" class="rounded-lg border border-black/20 px-4 py-2 text-sm font-semibold">Cerrar sesion</button>
-        </form>
-    </header>
-
-    <div th:if="${successMessage}" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800" th:text="${successMessage}"></div>
-
-    <div class="grid gap-8 lg:grid-cols-[2fr_1fr]">
-        <section class="rounded-2xl border border-black/10 bg-white p-6">
-            <h2 class="text-xl font-bold text-black">Nueva factura</h2>
-            <p class="mt-2 text-sm text-black/70">Completa los datos del cliente, servicio e importes.</p>
-
-            <form class="mt-6 grid gap-4" th:action="@{/dashboard/invoices}" th:object="${invoiceRequest}" method="post">
-                <div>
-                    <label class="text-sm font-semibold">Razon social / Cliente</label>
-                    <input type="text" th:field="*{clientName}" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2">
-                    <p th:if="${#fields.hasErrors('clientName')}" th:errors="*{clientName}" class="text-xs text-red-600 mt-1"></p>
-                </div>
-                <div class="grid gap-4 md:grid-cols-2">
-                    <div>
-                        <label class="text-sm font-semibold">NIF/CIF</label>
-                        <input type="text" th:field="*{clientNif}" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2">
-                        <p th:if="${#fields.hasErrors('clientNif')}" th:errors="*{clientNif}" class="text-xs text-red-600 mt-1"></p>
-                    </div>
-                    <div>
-                        <label class="text-sm font-semibold">Direccion</label>
-                        <input type="text" th:field="*{clientAddress}" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-sm font-semibold">Concepto</label>
-                    <textarea th:field="*{concept}" rows="3" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2"></textarea>
-                    <p th:if="${#fields.hasErrors('concept')}" th:errors="*{concept}" class="text-xs text-red-600 mt-1"></p>
-                </div>
-                <div class="grid gap-4 md:grid-cols-2">
-                    <div>
-                        <label class="text-sm font-semibold">Base imponible (EUR)</label>
-                        <input type="number" step="0.01" min="0" th:field="*{subtotal}" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2">
-                        <p th:if="${#fields.hasErrors('subtotal')}" th:errors="*{subtotal}" class="text-xs text-red-600 mt-1"></p>
-                    </div>
-                    <div>
-                        <label class="text-sm font-semibold">IVA (%)</label>
-                        <select th:field="*{taxRate}" class="mt-1 w-full rounded-lg border border-black/20 px-3 py-2">
-                            <option value="21">21</option>
-                            <option value="10">10</option>
-                            <option value="0">0</option>
-                        </select>
-                        <p th:if="${#fields.hasErrors('taxRate')}" th:errors="*{taxRate}" class="text-xs text-red-600 mt-1"></p>
-                    </div>
-                </div>
-
-                <button type="submit" class="mt-2 rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white">
-                    Generar factura y descargar PDF
+    </aside>
+    <button id="sidebarBackdrop" type="button" aria-label="Cerrar menú"
+            class="fixed inset-0 z-30 hidden bg-black/30 lg:hidden"></button>
+    <main>
+        <header class="flex h-20 items-center justify-between border-b border-black/[.04] bg-white px-6 md:px-12">
+            <div class="flex items-center gap-4">
+                <button id="sidebarToggle" type="button" aria-controls="dashboardSidebar" aria-expanded="false"
+                        aria-label="Mostrar menú" title="Mostrar menú"
+                        class="grid h-10 w-10 place-items-center rounded-lg bg-[#f1ede8] text-[#242321] focus:outline-none focus:ring-2 focus:ring-black">
+                    <span id="sidebarToggleIcon" class="material-symbols-outlined" aria-hidden="true">menu</span>
                 </button>
+                <span class="text-sm font-bold uppercase tracking-wider text-[#555]">Terminal Administrativo</span>
+            </div>
+            <form method="post" th:action="@{/logout}">
+                <button class="grid h-10 w-10 place-items-center rounded-full bg-black text-white"
+                        title="Cerrar sesión" aria-label="Cerrar sesión"><span class="material-symbols-outlined">person</span></button>
             </form>
-        </section>
-
-        <aside class="space-y-4">
-            <section class="rounded-2xl border border-black/10 bg-white p-5">
-                <h3 class="text-lg font-bold text-black">Ultimas emitidas</h3>
-                <div class="mt-4 space-y-3">
-                    <article th:if="${#lists.isEmpty(recentInvoices)}" class="text-sm text-black/70">Aun no hay facturas emitidas.</article>
-                    <article th:each="invoice : ${recentInvoices}" class="rounded-lg border border-black/10 p-3">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-[#e44b7c]" th:text="${invoice.invoiceNumber}">FAC-2026-0001</p>
-                        <p class="mt-1 text-sm font-semibold" th:text="${invoice.clientName}">Cliente</p>
-                        <p class="text-sm" th:text="${invoice.totalAmount + ' EUR'}">0.00 EUR</p>
-                        <a th:href="@{/dashboard/invoices/{id}/pdf(id=${invoice.id})}" class="mt-2 inline-block text-sm font-semibold text-black underline">
-                            Descargar PDF
-                        </a>
-                    </article>
+        </header>
+        <div class="mx-auto max-w-7xl px-5 py-8 md:px-12">
+            <div class="flex flex-col justify-between gap-5 rounded-2xl bg-[#f5f1ec] p-6 md:flex-row md:items-center">
+                <div class="flex items-center gap-5"><img th:src="@{/images/mf-logo-black.png}"
+                                                          src="/images/mf-logo-black.png" alt="MF"
+                                                          class="h-16 w-16 rounded-xl object-cover">
+                    <div><p class="text-sm font-bold uppercase tracking-wide text-[#666]">Gestión comercial <span
+                            class="ml-2 text-[#ec5b88]">● Sistema activo</span></p>
+                        <h1 class="text-3xl font-extrabold">Módulo de Facturación</h1></div>
                 </div>
-            </section>
-        </aside>
-    </div>
+                <a href="#invoice-form" class="rounded-xl bg-black px-6 py-4 font-bold text-white shadow-md">＋ Nueva
+                    Factura</a></div>
+            <div th:if="${successMessage}"
+                 class="mt-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800"
+                 th:text="${successMessage}"></div>
+            <div th:if="${validationErrorMessage}"
+                 class="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800"
+                 th:text="${validationErrorMessage}"></div>
+            <div class="mt-7 grid gap-7 xl:grid-cols-[minmax(0,1fr)_330px]">
+                <section id="invoice-form"
+                         class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[.04]">
+                    <div class="flex flex-col justify-between gap-5 bg-[#f5f1ec] p-7 md:flex-row md:items-center">
+                        <div class="flex items-center gap-4"><span
+                                class="material-symbols-outlined grid h-12 w-12 place-items-center rounded-xl bg-white text-3xl">receipt_long</span>
+                            <div><p class="text-xs font-bold uppercase tracking-wide text-[#666]">Documento oficial</p>
+                                <h2 class="text-2xl font-extrabold">Emisión de Nueva Factura</h2></div>
+                        </div>
+                    </div>
+                    <form class="space-y-9 p-7 md:p-10" th:action="@{/dashboard/invoices}" th:object="${invoiceRequest}"
+                          method="post">
+                        <section><h3 class="text-xl font-extrabold uppercase">● &nbsp;Datos de la factura</h3>
+                            <div class="mt-6 grid gap-5 md:grid-cols-2"><div><label class="label">Número de factura</label><input th:field="*{invoiceNumber}" class="field"><p class="error" th:if="${#fields.hasErrors('invoiceNumber')}" th:errors="*{invoiceNumber}"></p></div><div><label class="label">Fecha de emisión</label><input type="date" th:field="*{issueDate}" class="field"><p class="error" th:if="${#fields.hasErrors('issueDate')}" th:errors="*{issueDate}"></p></div></div>
+                        </section>
+                        <section><h3 class="text-xl font-extrabold uppercase">● &nbsp;1. Datos del cliente</h3>
+                            <div class="mt-6 grid gap-5 md:grid-cols-2">
+                                <div class="md:col-span-2"><label class="label">Razón Social o Nombre del
+                                    Cliente</label><input th:field="*{clientName}" class="field"
+                                                          placeholder="Transportes &amp; Logística Catalana S.L.">
+                                    <p class="error" th:if="${#fields.hasErrors('clientName')}"
+                                       th:errors="*{clientName}"></p></div>
+                                <div><label class="label">CIF / NIF</label><input th:field="*{clientNif}" class="field"
+                                                                                  placeholder="B-67891234">
+                                    <p class="error" th:if="${#fields.hasErrors('clientNif')}"
+                                       th:errors="*{clientNif}"></p></div>
+                                <div><label class="label">Dirección Fiscal Completa</label><textarea th:field="*{clientAddress}" rows="3" class="field resize-none"></textarea></div>
+                            </div>
+                        </section>
+                        <section><div class="flex items-center justify-between"><h3 class="text-xl font-extrabold uppercase">● &nbsp;2. Líneas de factura</h3><button id="addLine" type="button" class="rounded-lg bg-[#f1ede8] px-4 py-2 text-sm font-bold">＋ Añadir línea</button></div>
+                            <div id="invoiceLines" class="mt-6 space-y-4"><div th:each="line, status : *{lines}" class="invoice-line grid gap-3 rounded-xl bg-[#f7f3ee] p-4 md:grid-cols-[1fr_120px_150px_42px]"><div><label class="label">Descripción</label><input th:field="*{lines[__${status.index}__].description}" class="field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].description')}" th:errors="*{lines[__${status.index}__].description}"></p></div><div><label class="label">Cantidad</label><input type="number" min="0.01" step="0.01" th:field="*{lines[__${status.index}__].quantity}" class="line-quantity field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].quantity')}" th:errors="*{lines[__${status.index}__].quantity}"></p></div><div><label class="label">Precio unit. (€)</label><input type="number" min="0" step="0.01" th:field="*{lines[__${status.index}__].unitPrice}" class="line-price field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].unitPrice')}" th:errors="*{lines[__${status.index}__].unitPrice}"></p></div><button type="button" class="remove-line mt-7 rounded-lg p-2 text-[#e44b7c]" title="Eliminar línea"><span class="material-symbols-outlined">delete</span></button></div></div>
+                            <p class="error" th:if="${#fields.hasErrors('lines')}" th:errors="*{lines}"></p>
+                        </section>
+                        <section><h3 class="text-xl font-extrabold uppercase">● &nbsp;3. Importes e Impuestos</h3>
+                            <div class="mt-6 grid gap-5 md:grid-cols-2">
+                                <div>
+                                    <label class="label">Base imponible</label>
+                                    <output id="subtotal" aria-live="polite" class="field block text-xl font-bold">0,00 €</output>
+                                </div>
+                                <div class="field flex items-center justify-between font-bold">
+                                    <span>IVA aplicable</span><span>21,00%</span>
+                                </div>
+                                <div class="field flex items-center justify-between font-bold">
+                                    <span>IRPF</span><span>-1,00%</span>
+                                </div>
+                            </div>
+                        </section>
+                        <div class="flex flex-col gap-4 sm:flex-row">
+                            <button type="submit"
+                                    class="flex flex-1 items-center justify-center gap-3 rounded-xl bg-black px-6 py-4 font-bold text-white shadow-lg">
+                                <span class="material-symbols-outlined">picture_as_pdf</span>Generar y Descargar PDF
+                            </button>
+                            <button type="reset" class="rounded-xl bg-[#f1ede8] px-6 py-4 font-bold"><span
+                                    class="material-symbols-outlined align-middle">bookmark</span> Guardar Borrador
+                            </button>
+                        </div>
+                    </form>
+                </section>
+                <aside class="space-y-7">
+                    <section class="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-black/[.04]">
+                        <div class="flex justify-between text-sm font-bold uppercase tracking-wide text-[#666]"><span>Liquidación fiscal</span><span
+                                class="rounded-full bg-[#f1ede8] px-3 py-1 text-xs">EUR €</span></div>
+                        <div class="mt-7 rounded-xl bg-[#f5f1ec] p-5">
+                            <div class="summary"><span>Base imponible</span><b id="baseSummary">0,00 €</b></div>
+                            <div class="summary"><span>IVA</span><b>21,00%</b></div>
+                            <div class="summary"><span>Total IVA 21%</span><b id="ivaSummary">0,00 €</b></div>
+                            <div class="summary"><span>IRPF</span><b>-1,00%</b></div>
+                            <div class="summary"><span>Total retenciones</span><b id="retentionsSummary">0,00 €</b></div>
+                            <hr class="my-5 border-black/10">
+                            <p class="font-bold">TOTAL</p>
+                            <p id="totalSummary" aria-live="polite" class="mt-2 text-right text-4xl font-extrabold text-[#ec5b88]">0,00 €</p></div>
+                        <div class="mt-6 text-sm leading-6 text-[#666]"><p class="font-bold uppercase">♢ Cumplimiento
+                            Veri*Factu</p>
+                            <p class="mt-2">Registro inalterable con encadenamiento criptográfico conforme a la
+                                normativa fiscal vigente.</p></div>
+                    </section>
+                    <section class="rounded-2xl bg-[#f1ede8] p-7">
+                        <div class="flex justify-between font-bold uppercase tracking-wide text-[#666]"><span>Últimas emitidas</span><span
+                                class="material-symbols-outlined">history</span></div>
+                        <div class="mt-5 space-y-3"><p th:if="${#lists.isEmpty(recentInvoices)}"
+                                                       class="text-sm text-[#666]">Aún no hay facturas emitidas.</p>
+                            <article th:each="invoice : ${recentInvoices}" class="rounded-xl bg-white p-4">
+                                <div class="flex justify-between gap-3">
+                                    <div><b th:text="${invoice.invoiceNumber}">FAC-2026-001</b>
+                                        <p class="text-sm text-[#666]" th:text="${invoice.clientName}">Cliente</p></div>
+                                    <b th:text="${invoice.totalAmount + ' €'}">0,00 €</b></div>
+                                <a th:href="@{/dashboard/invoices/{id}/pdf(id=${invoice.id})}"
+                                   class="mt-2 inline-block text-sm font-bold underline">Descargar PDF</a></article>
+                        </div>
+                    </section>
+                </aside>
+            </div>
+        </div>
+    </main>
 </div>
+<style>.label {
+    display: block;
+    margin-bottom: .5rem;
+    font-weight: 600;
+    color: #4b4a48
+}
+
+.field {
+    width: 100%;
+    border: 0;
+    border-radius: .75rem;
+    background: #f5f1ec;
+    padding: .9rem 1rem;
+    outline: none
+}
+
+.field:focus {
+    box-shadow: 0 0 0 2px #242321
+}
+
+.error {
+    margin-top: .35rem;
+    font-size: .875rem;
+    color: #dc2626
+}
+
+.summary {
+    display: flex;
+    justify-content: space-between;
+    margin: 1rem 0;
+    color: #555
+}
+
+.summary b {
+    color: #242321
+}</style>
+<script>
+const layout = document.getElementById('dashboardLayout');
+const sidebar = document.getElementById('dashboardSidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
+const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+const desktopLayout = window.matchMedia('(min-width: 1024px)');
+const lines = document.getElementById('invoiceLines');
+const VAT_RATE = 21;
+const IRPF_RATE = 1;
+const format = amount => new Intl.NumberFormat('es-ES', {style: 'currency', currency: 'EUR'}).format(amount);
+function setSidebarExpanded(expanded) {
+    if (desktopLayout.matches) {
+        layout.classList.toggle('sidebar-collapsed', !expanded);
+    } else {
+        sidebar.classList.toggle('translate-x-0', expanded);
+        sidebarBackdrop.classList.toggle('hidden', !expanded);
+    }
+    sidebarToggle.setAttribute('aria-expanded', String(expanded));
+    sidebarToggle.setAttribute('aria-label', expanded ? 'Ocultar menú' : 'Mostrar menú');
+    sidebarToggle.title = expanded ? 'Ocultar menú' : 'Mostrar menú';
+    sidebarToggleIcon.textContent = expanded ? 'menu_open' : 'menu';
+}
+sidebarToggle.addEventListener('click', () => {
+    setSidebarExpanded(sidebarToggle.getAttribute('aria-expanded') !== 'true');
+});
+sidebarBackdrop.addEventListener('click', () => setSidebarExpanded(false));
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !desktopLayout.matches &&
+        sidebarToggle.getAttribute('aria-expanded') === 'true') {
+        setSidebarExpanded(false);
+        sidebarToggle.focus();
+    }
+});
+sidebar.querySelector('nav').addEventListener('click', () => {
+    if (!desktopLayout.matches) {
+        setSidebarExpanded(false);
+    }
+});
+desktopLayout.addEventListener('change', () => setSidebarExpanded(desktopLayout.matches));
+setSidebarExpanded(desktopLayout.matches);
+function recalculate() {
+    const baseCents = [...lines.querySelectorAll('.invoice-line')].reduce((sum, line) => {
+        const quantity = parseFloat(line.querySelector('.line-quantity').value) || 0;
+        const unitPrice = parseFloat(line.querySelector('.line-price').value) || 0;
+        return sum + Math.round(quantity * unitPrice * 100);
+    }, 0);
+    const vatCents = Math.round(baseCents * VAT_RATE / 100);
+    const retentionCents = -Math.round(baseCents * IRPF_RATE / 100);
+    const totalCents = baseCents + vatCents + retentionCents;
+    document.getElementById('subtotal').textContent = format(baseCents / 100);
+    document.getElementById('baseSummary').textContent = format(baseCents / 100);
+    document.getElementById('ivaSummary').textContent = format(vatCents / 100);
+    document.getElementById('retentionsSummary').textContent = format(retentionCents / 100);
+    document.getElementById('totalSummary').textContent = format(totalCents / 100);
+}
+function renumber() {
+    [...lines.querySelectorAll('.invoice-line')].forEach((line, index) => {
+        line.querySelectorAll('input').forEach(input => {
+            input.name = input.name.replace(/^lines\[\d+\]\./, `lines[${index}].`);
+            input.id = input.id.replace(/^lines\d+\./, `lines${index}.`);
+        });
+    });
+}
+document.getElementById('addLine').addEventListener('click', () => {
+    const index = lines.querySelectorAll('.invoice-line').length;
+    lines.insertAdjacentHTML('beforeend', `<div class="invoice-line grid gap-3 rounded-xl bg-[#f7f3ee] p-4 md:grid-cols-[1fr_120px_150px_42px]"><div><label class="label">Descripción</label><input name="lines[${index}].description" class="field bg-white"></div><div><label class="label">Cantidad</label><input name="lines[${index}].quantity" type="number" min="0.01" step="0.01" value="1" class="line-quantity field bg-white"></div><div><label class="label">Precio unit. (€)</label><input name="lines[${index}].unitPrice" type="number" min="0" step="0.01" value="0" class="line-price field bg-white"></div><button type="button" class="remove-line mt-7 rounded-lg p-2 text-[#e44b7c]"><span class="material-symbols-outlined">delete</span></button></div>`);
+    recalculate();
+});
+lines.addEventListener('input', recalculate);
+lines.addEventListener('change', recalculate);
+document.querySelector('#invoice-form form').addEventListener('submit', recalculate);
+lines.addEventListener('click', event => {
+    const button = event.target.closest('.remove-line');
+    if (button && lines.querySelectorAll('.invoice-line').length > 1) { button.closest('.invoice-line').remove(); renumber(); recalculate(); }
+});
+recalculate();
+</script>
 </body>
 </html>
-

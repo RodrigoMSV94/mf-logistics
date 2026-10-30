@@ -112,8 +112,12 @@ mf-logistica/
 * `subtotal` (BigDecimal)
 * `taxRate` (BigDecimal, default 21.0)
 * `taxAmount` (BigDecimal)
+* `irpfRate` (BigDecimal, 1.0 para este perfil de facturación)
+* `totalRetentions` (BigDecimal, importe negativo retenido en la factura)
 * `totalAmount` (BigDecimal)
 * `concept` (String)
+
+El dashboard calcula los importes desde las líneas de factura: base imponible, IVA fijo del 21%, retención IRPF fija del 1% y total (`base + IVA - retención`). Los tipos fijos se aplican también en el servicio de aplicación; no dependen de valores enviados por el navegador.
 
 ## 6. Mapeo de Rutas MVC
 
