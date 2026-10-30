@@ -35,10 +35,9 @@
     </div>
     <form class="mt-8 space-y-6" method="post" th:action="@{/login}">
         <div>
-            <div class="mb-2 flex justify-between"><label for="username" class="font-bold">Usuario o Correo
-                Electrónico</label><span class="text-sm text-[#777]">Requerido</span></div>
+            <div class="mb-2 flex justify-between"><label for="username" class="font-bold">Nombre de usuario</label><span class="text-sm text-[#777]">Requerido</span></div>
             <div class="relative"><span class="material-symbols-outlined absolute left-4 top-3 text-[#888]">badge</span><input
-                    id="username" name="username" type="email" required placeholder="admin@mflogistica.es"
+                    id="username" name="username" type="text" autocomplete="username" required placeholder="mfadmin"
                     class="w-full rounded-xl bg-[#f5f1ec] py-3 pl-12 pr-4 outline-none ring-[#222] focus:ring-2"></div>
         </div>
         <div>

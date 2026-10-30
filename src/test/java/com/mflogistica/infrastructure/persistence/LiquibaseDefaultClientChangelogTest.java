@@ -23,8 +23,14 @@ class LiquibaseDefaultClientChangelogTest {
         String changelogContent = new ClassPathResource("db/changelog/db.changelog-master.xml")
                 .getContentAsString(StandardCharsets.UTF_8);
 
-        assertEquals(2, changeLog.getChangeSets().size());
+        assertEquals(5, changeLog.getChangeSets().size());
         assertTrue(changelogContent.contains("73025558Y"));
         assertTrue(changelogContent.contains("SAÚL GUERRERO LÓPEZ"));
+        assertTrue(changelogContent.contains("20261030-04-snapshot-invoice-issuer"));
+        assertTrue(changelogContent.contains("Y8023499D"));
+        assertTrue(changelogContent.contains("<update tableName=\"invoices\">"));
+        assertTrue(changelogContent.contains("columnName=\"issuer_name\""));
+        assertTrue(changelogContent.contains("20261030-05-email-to-username"));
+        assertTrue(changelogContent.contains("newColumnName=\"username\""));
     }
 }

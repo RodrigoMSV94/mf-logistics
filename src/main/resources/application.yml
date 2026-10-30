@@ -29,6 +29,6 @@ app:
     enabled: ${APP_LOCAL_DATA_RESET_ENABLED:true}
   security:
     admin:
-      email: ${APP_ADMIN_EMAIL:admin@mflogistica.es}
+      username: ${APP_ADMIN_USERNAME:mfadmin}
       password: ${APP_ADMIN_PASSWORD:Admin1234!}
       full-name: ${APP_ADMIN_FULL_NAME:Administrador MF}

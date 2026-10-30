@@ -90,6 +90,8 @@ mf-logistica/
                 └── dashboard.html
 ```
 
+La estructura anterior es una vista resumida. El proyecto también incluye modelos y persistencia de `Client` y `FiscalData`, sus puertos/servicios/adaptadores, `FiscalDataController` y las vistas `facturas.html` y `datos-fiscales.html`. La factura se compone de líneas persistidas y de los campos `issuerName`, `issuerNif`, `issuerAddress`, `issuerPhone`, `issuerEmail` e `issuerIban`, que forman su snapshot fiscal.
+
 ## 4. Principios de Código (SOLID & Clean Architecture)
 1. **Single Responsibility (SRP):** Los controladores solo manejan peticiones HTTP/Navegación. La lógica de negocio reside en `application/service`. La generación física de PDF está desacoplada en `infrastructure/pdf`.
 2. **Open/Closed & Interface Segregation (OCP/ISP):** El servicio de PDF e infraestructura implementan interfaces/puertos (`PdfGeneratorPort`), permitiendo cambiar la librería sin afectar la lógica de negocio.
@@ -102,10 +104,12 @@ Aplicar Java 21 y Spring Boot 4 como estándares objetivo, manteniendo explícit
 
 ### Entidad `User`
 * `id` (Long, PK)
-* `email` (String, Unique)
+* `username` (String, Unique; principal de autenticación)
 * `password` (String, BCrypt)
 * `fullName` (String)
 * `role` (String, default: "ROLE_ADMIN")
+
+El usuario administrador inicial es `mfadmin` (configurable con `APP_ADMIN_USERNAME`). La migración renombra la columna histórica `email` a `username` y migra la cuenta inicial existente preservando contraseña y rol.
 
 ### Entidad `Invoice`
 * `id` (Long, PK)
@@ -120,7 +124,8 @@ Aplicar Java 21 y Spring Boot 4 como estándares objetivo, manteniendo explícit
 * `irpfRate` (BigDecimal, 1.0 para este perfil de facturación)
 * `totalRetentions` (BigDecimal, importe negativo retenido en la factura)
 * `totalAmount` (BigDecimal)
-* `concept` (String)
+* `lines` (líneas de factura con descripción, cantidad y precio unitario)
+* `issuerSnapshot` (copia del emisor al emitir: nombre, NIF, dirección, teléfono, correo e IBAN)
 
 El dashboard calcula los importes desde las líneas de factura: base imponible, IVA fijo del 21%, retención IRPF fija del 1% y total (`base + IVA - retención`). Los tipos fijos se aplican también en el servicio de aplicación; no dependen de valores enviados por el navegador.
 
@@ -131,6 +136,11 @@ El dashboard calcula los importes desde las líneas de factura: base imponible, 
 
 El cliente de ejemplo SAÚL GUERRERO LÓPEZ (`73025558Y`) se incorpora en `src/main/resources/db/changelog/db.changelog-master.xml`. Liquibase crea la tabla y siembra el cliente de forma idempotente; las facturas guardadas sincronizan sus datos en el catálogo de clientes.
 
+### Datos fiscales del emisor y snapshot de factura
+`FiscalData` contiene nombre/razón social, NIF, dirección, teléfono, correo e IBAN. La configuración actual se edita en `/dashboard/datos-fiscales`. Al crear una factura, la aplicación lee la configuración vigente y la copia en columnas de la factura; el PDF siempre se genera desde ese snapshot. Si posteriormente se modifica la configuración, las facturas nuevas y sus PDFs usan los valores nuevos, mientras que las facturas existentes —incluidas las editadas o descargadas de nuevo— conservan sus datos fiscales originales. Liquibase inicializa el perfil fiscal y rellena los snapshots de las facturas históricas con los datos del emisor previos a esta funcionalidad.
+
+El catálogo de clientes se guarda en PostgreSQL, identificado por NIF. Al guardar una factura se sincronizan los datos del cliente con el catálogo, que alimenta el selector de clientes guardados. Si se edita un cliente desde una factura y se conserva el NIF, el catálogo se actualiza con esos datos; las facturas previas mantienen su propia copia de los datos del cliente.
+
 ## 6. Mapeo de Rutas MVC
 
 | Método | Ruta | Controlador | Descripción | Permisos |
@@ -138,75 +148,21 @@ El cliente de ejemplo SAÚL GUERRERO LÓPEZ (`73025558Y`) se incorpora en `src/m
 | `GET` | `/` | `PublicController` | Renderiza `index.html` (Landing) | Público |
 | `GET` | `/login` | `AuthController` | Renderiza `login.html` | Público |
 | `POST` | `/login` | `Security` | Autenticación de administradores | Público |
-| `GET` | `/dashboard` | `DashboardController` | Renderiza `dashboard.html` | `ROLE_ADMIN` |
+| `GET` | `/dashboard` | `DashboardController` | Formulario para crear factura | `ROLE_ADMIN` |
 | `GET` | `/dashboard/facturas` | `DashboardController` | Lista, filtra y pagina facturas | `ROLE_ADMIN` |
 | `GET` | `/dashboard/facturas/{id}/editar` | `DashboardController` | Abre una factura para edición | `ROLE_ADMIN` |
-| `POST` | `/dashboard/invoices` | `DashboardController` | Crea o actualiza una factura y descarga su PDF | `ROLE_ADMIN` |
-| `GET` | `/dashboard/invoices/{id}/pdf` | `DashboardController` | Descarga el archivo PDF directo | `ROLE_ADMIN` |
+| `GET/POST` | `/dashboard/datos-fiscales` | `FiscalDataController` | Consulta y actualiza datos del emisor para nuevas facturas | `ROLE_ADMIN` |
+| `POST` | `/dashboard/invoices` | `DashboardController` | Crea o actualiza una factura y redirige al listado con descarga del PDF | `ROLE_ADMIN` |
+| `GET` | `/dashboard/invoices/{id}/pdf` | `DashboardController` | Descarga el PDF generado desde la factura y su snapshot fiscal | `ROLE_ADMIN` |
 
-## 7. Configuración de Entornos (Render + Neon DB)
+## 7. Configuración y despliegue (Render + Neon DB)
 
-### `application.yml`
-```yaml
-server:
-  port: ${PORT:8080}
+La aplicación lee la conexión desde `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` y `SPRING_DATASOURCE_PASSWORD`. El servidor usa `PORT` (por defecto `8080`). Liquibase aplica `classpath:db/changelog/db.changelog-master.xml`; Hibernate está configurado con `ddl-auto: update`.
 
-spring:
-  application:
-    name: mf-logistica
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/mflogistica}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        jdbc:
-          lob:
-            non_contextual_creation: true
-```
-eof
-```
+El administrador inicial se configura con `APP_ADMIN_USERNAME` (default `mfadmin`), `APP_ADMIN_PASSWORD` (default `Admin1234!`) y `APP_ADMIN_FULL_NAME` (default `Administrador MF`). El inicializador crea la cuenta si no existe, pero no restablece una contraseña existente. Configurar una contraseña segura en todos los despliegues.
 
----
+`APP_LOCAL_DATA_RESET_ENABLED` está activo por defecto, pero el reinicio de facturas de muestra solo se ejecuta cuando la URL JDBC apunta a loopback (`localhost`, `127.0.0.1` o `::1`). Se puede desactivar con `APP_LOCAL_DATA_RESET_ENABLED=false`; no habilitar ese comportamiento contra una base de datos remota.
 
-### Prompt definitivo para Copilot en IntelliJ
+El `Dockerfile` usa una etapa Maven con Java 21 para empaquetar y una imagen Java 21 JRE para ejecutar en el puerto 8080. No existe un archivo Docker Compose en el repositorio. No requiere cambios para la funcionalidad fiscal/autenticación: utiliza Java 21, compatible con la versión declarada actualmente en Maven.
 
-Copia y pega este prompt exacto en el chat de **GitHub Copilot**:
-
-```text
-Actúa como un Arquitecto de Software y Desarrollador Principal experto en Java 21, Spring Boot y Clean Architecture.
-
-Necesito que construyas la estructura completa del proyecto desde cero respetando estrictamente la documentación técnica definida en el archivo `CONTEXT.md` que está en la raíz del proyecto.
-
-### REQUERIMIENTOS CLAVE:
-1. Lee minuciosamente `CONTEXT.md` para entender la arquitectura por capas (domain, application, infrastructure, web).
-2. Explora la carpeta `docs/desing-html` (y todas sus subcarpetas) para extraer los HTML/Tailwind CSS diseñados en Google Stitch. Adapta esas maquetas como plantillas Thymeleaf dentro de `src/main/resources/templates/` (`index.html`, `login.html`, `dashboard.html`).
-3. Sigue principios SOLID y Clean Code: desacopla persistencia y servicios externos mediante interfaces/puertos (`PdfGeneratorPort`, `InvoiceRepositoryPort`).
-
-### TAREAS A EJECUTAR DE FORMA ORDENADA:
-1. `pom.xml`: Genera el archivo con dependencias para Java 21, Spring Boot (Web, Security, Data JPA, Validation, Thymeleaf), PostgreSQL, Lombok y OpenPDF.
-2. Dominio y Aplicación:
-   - Clases de Dominio (`User`, `Invoice`) y DTOs con validaciones.
-   - Puertos e interfaces de servicios.
-   - `InvoiceService.java`: Lógica para calcular IVA, totales y coordinar la creación y emisión de facturas.
-3. Infraestructura:
-   - Entidades JPA, Repositorios Spring Data y Mapeadores.
-   - `OpenPdfGeneratorAdapter.java`: Implementación física de generación de PDF con la paleta de colores corporativa (negro, beige, rosa) indicada en el diseño.
-   - `SecurityConfig.java`: Autenticación por formulario y usuario inicial en memoria/BD.
-4. Capa Web (MVC):
-   - `PublicController.java`, `AuthController.java` y `DashboardController.java`.
-   - Control de excepciones global (`GlobalExceptionHandler.java`).
-5. Configuración y Despliegue:
-   - `application.yml` parametrizado con variables de entorno para Neon PostgreSQL.
-   - `Dockerfile` multi-stage para Java 21 listo para desplegar en Render.
-
-Comienza generando los archivos paso a paso.
-```
-
-¿Quieres que hagamos algún ajuste en los controladores o en la entidad de facturación antes de que se lo envíes a Copilot?
+Las imágenes de contenedor ejecutan el empaquetado con `-DskipTests`; las pruebas deben ejecutarse antes de construir/publicar la imagen.

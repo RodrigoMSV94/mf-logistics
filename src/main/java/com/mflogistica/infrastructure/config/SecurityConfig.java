@@ -45,8 +45,8 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService(UserRepositoryPort userRepositoryPort) {
-        return username -> userRepositoryPort.findByEmail(username)
-                .map(user -> User.withUsername(user.email())
+        return username -> userRepositoryPort.findByUsername(username)
+                .map(user -> User.withUsername(user.username())
                         .password(user.password())
                         .authorities(List.of(new SimpleGrantedAuthority(user.role())))
                         .build())

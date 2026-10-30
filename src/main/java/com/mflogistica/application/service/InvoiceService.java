@@ -11,6 +11,7 @@ import com.mflogistica.domain.exception.BusinessException;
 import com.mflogistica.domain.exception.DuplicateInvoiceNumberException;
 import com.mflogistica.domain.model.Invoice;
 import com.mflogistica.domain.model.InvoiceLine;
+import com.mflogistica.domain.model.FiscalData;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,12 +29,14 @@ public class InvoiceService {
     private final InvoiceRepositoryPort invoiceRepositoryPort;
     private final PdfGeneratorPort pdfGeneratorPort;
     private final ClientService clientService;
+    private final FiscalDataService fiscalDataService;
 
     public InvoiceService(InvoiceRepositoryPort invoiceRepositoryPort, PdfGeneratorPort pdfGeneratorPort,
-                          ClientService clientService) {
+                          ClientService clientService, FiscalDataService fiscalDataService) {
         this.invoiceRepositoryPort = invoiceRepositoryPort;
         this.pdfGeneratorPort = pdfGeneratorPort;
         this.clientService = clientService;
+        this.fiscalDataService = fiscalDataService;
     }
 
     @Transactional
@@ -77,9 +80,13 @@ public class InvoiceService {
                 .negate();
         BigDecimal totalAmount = subtotal.add(taxAmount).add(totalRetentions).setScale(2, RoundingMode.HALF_UP);
 
+        FiscalData issuerSnapshot = request.invoiceId() == null
+                ? fiscalDataService.getCurrent()
+                : findInvoice(request.invoiceId()).issuerSnapshot();
         Invoice saved = invoiceRepositoryPort.save(new Invoice(request.invoiceId(), invoiceNumber,
                 request.clientName().trim(), request.clientNif().trim(), trimOrEmpty(request.clientAddress()),
-                request.issueDate(), subtotal, VAT_RATE, taxAmount, IRPF_RATE, totalRetentions, totalAmount, lines));
+                request.issueDate(), subtotal, VAT_RATE, taxAmount, IRPF_RATE, totalRetentions, totalAmount, lines,
+                issuerSnapshot));
         clientService.saveFromInvoice(saved.clientName(), saved.clientNif(), saved.clientAddress());
         return toResponse(saved);
     }

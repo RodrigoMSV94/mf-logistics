@@ -9,8 +9,10 @@ import com.mflogistica.application.port.ClientRepositoryPort;
 import com.mflogistica.domain.model.Client;
 import com.mflogistica.domain.model.Invoice;
 import com.mflogistica.domain.model.InvoiceLine;
+import com.mflogistica.domain.model.FiscalData;
 import com.mflogistica.domain.exception.BusinessException;
 import com.mflogistica.application.dto.InvoiceSearchResultDto;
+import com.mflogistica.application.port.FiscalDataRepositoryPort;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -99,6 +101,28 @@ class InvoiceServiceTest {
     }
 
     @Test
+    void shouldPreserveFiscalSnapshotOnExistingInvoicesAndUseCurrentDataForNewInvoices() {
+        InMemoryInvoiceRepository invoiceRepository = new InMemoryInvoiceRepository();
+        InMemoryFiscalDataRepository fiscalDataRepository = new InMemoryFiscalDataRepository();
+        testClientService = new ClientService(new InMemoryClientRepository());
+        InvoiceService service = new InvoiceService(invoiceRepository, invoice -> "pdf".getBytes(),
+                testClientService, new FiscalDataService(fiscalDataRepository));
+        InvoiceResponseDto created = service.createInvoice(request("FAC-SNAPSHOT-1", "100.00"));
+        FiscalData updatedIssuer = new FiscalData("Nueva Empresa", "B87654321", "Nueva dirección",
+                "600000000", "nueva@empresa.es", "ES0000000000000000000000");
+        fiscalDataRepository.save(updatedIssuer);
+        InvoiceRequestDto update = request("FAC-SNAPSHOT-1", "200.00");
+        update.setInvoiceId(created.id());
+        service.saveInvoice(update);
+        InvoiceResponseDto next = service.createInvoice(request("FAC-SNAPSHOT-2", "100.00"));
+
+        assertEquals("MARTHA DENISSE CARRILLO TOVAR",
+                invoiceRepository.findById(created.id()).orElseThrow().issuerSnapshot().issuerName());
+        assertEquals(updatedIssuer,
+                invoiceRepository.findById(next.id()).orElseThrow().issuerSnapshot());
+    }
+
+    @Test
     void shouldLoadPersistedIssueDateForEditing() {
         InMemoryInvoiceRepository repo = new InMemoryInvoiceRepository();
         InvoiceService service = service(repo, invoice -> "pdf".getBytes());
@@ -161,7 +185,8 @@ class InvoiceServiceTest {
 
     private InvoiceService service(InMemoryInvoiceRepository repository, PdfGeneratorPort pdfGeneratorPort) {
         testClientService = new ClientService(new InMemoryClientRepository());
-        return new InvoiceService(repository, pdfGeneratorPort, testClientService);
+        return new InvoiceService(repository, pdfGeneratorPort, testClientService,
+                new FiscalDataService(new InMemoryFiscalDataRepository()));
     }
 
     private InvoiceRequestDto request(String number, String amount) {
@@ -191,7 +216,8 @@ class InvoiceServiceTest {
                     invoice.lines().stream()
                             .map(line -> new InvoiceLine((long) (invoices.size() + 1), line.description(),
                                     line.quantity(), line.unitPrice(), line.totalAmount()))
-                            .toList()
+                            .toList(),
+                    invoice.issuerSnapshot()
             );
             if (invoice.id() == null) {
                 invoices.add(persisted);
@@ -261,6 +287,30 @@ class InvoiceServiceTest {
         @Override
         public void deleteAll() {
             clients.clear();
+        }
+
+    }
+
+    private static final class InMemoryFiscalDataRepository implements FiscalDataRepositoryPort {
+
+        private FiscalData fiscalData = new FiscalData(
+                "MARTHA DENISSE CARRILLO TOVAR",
+                "Y8023499D",
+                "Carrer del Pintor Huguet, 1\n17310 Lloret de Mar (Girona, España)",
+                "+34 664 008 020",
+                "denissecarrillo1986@gmail.com",
+                "ES50 2100 8137 8902 0047 3817"
+        );
+
+        @Override
+        public Optional<FiscalData> findCurrent() {
+            return Optional.of(fiscalData);
+        }
+
+        @Override
+        public FiscalData save(FiscalData updated) {
+            fiscalData = updated;
+            return updated;
         }
     }
 }

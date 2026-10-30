@@ -10,7 +10,7 @@ public class UserMapper {
     public User toDomain(UserEntity entity) {
         return new User(
                 entity.getId(),
-                entity.getEmail(),
+                entity.getUsername(),
                 entity.getPassword(),
                 entity.getFullName(),
                 entity.getRole()
@@ -20,11 +20,10 @@ public class UserMapper {
     public UserEntity toEntity(User domain) {
         UserEntity entity = new UserEntity();
         entity.setId(domain.id());
-        entity.setEmail(domain.email());
+        entity.setUsername(domain.username());
         entity.setPassword(domain.password());
         entity.setFullName(domain.fullName());
         entity.setRole(domain.role());
         return entity;
     }
 }
-
