@@ -17,6 +17,7 @@ public record Invoice(
         BigDecimal irpfRate,
         BigDecimal totalRetentions,
         BigDecimal totalAmount,
-        List<InvoiceLine> lines
+        List<InvoiceLine> lines,
+        FiscalData issuerSnapshot
 ) {
 }

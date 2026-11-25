@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguridad | MF Logística</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { font-family: Arial, sans-serif }</style>
+</head>
+<body class="min-h-screen bg-[#fdf9f4] text-[#242321]">
+<header class="flex h-20 items-center justify-between border-b border-black/[.04] bg-white px-5 sm:px-8">
+    <a th:href="@{/dashboard/facturas}" class="font-extrabold">MF ADMIN · SEGURIDAD</a>
+    <form method="post" th:action="@{/logout}">
+        <button class="rounded-lg bg-red-50 px-4 py-2 font-bold text-red-700">Cerrar sesión</button>
+    </form>
+</header>
+<main class="mx-auto w-full max-w-xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold">Cambiar contraseña</h1>
+    <p class="mt-3 text-sm leading-6 text-[#666]">
+        Confirma tu contraseña actual y define una nueva de al menos 16 caracteres. Al actualizarla, se cerrará esta sesión.
+    </p>
+    <div th:if="${error}" th:text="${error}"
+         class="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"></div>
+    <form method="post" th:action="@{/dashboard/seguridad}"
+          class="mt-7 space-y-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/[.04] sm:p-8">
+        <div>
+            <label for="currentPassword" class="mb-2 block text-sm font-bold">Contraseña actual</label>
+            <input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password"
+                   required class="w-full rounded-xl bg-[#f5f1ec] px-4 py-3 outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <div>
+            <label for="newPassword" class="mb-2 block text-sm font-bold">Nueva contraseña</label>
+            <input id="newPassword" name="newPassword" type="password" autocomplete="new-password" minlength="16"
+                   required class="w-full rounded-xl bg-[#f5f1ec] px-4 py-3 outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <div>
+            <label for="confirmPassword" class="mb-2 block text-sm font-bold">Confirmar nueva contraseña</label>
+            <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" minlength="16"
+                   required class="w-full rounded-xl bg-[#f5f1ec] px-4 py-3 outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <button type="submit" class="w-full rounded-xl bg-black px-5 py-3 font-bold text-white">
+            Actualizar contraseña
+        </button>
+        <a th:href="@{/dashboard/facturas}" class="block text-center text-sm font-semibold underline">
+            Volver a facturas
+        </a>
+    </form>
+</main>
+</body>
+</html>

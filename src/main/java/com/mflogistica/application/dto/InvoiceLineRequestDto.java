@@ -24,17 +24,23 @@ public class InvoiceLineRequestDto {
     private BigDecimal quantity;
 
     @NotNull(message = "El precio unitario es obligatorio")
-    @DecimalMin(value = "0.00", message = "El precio unitario no puede ser negativo")
     @Digits(integer = 12, fraction = 2, message = "El precio unitario no tiene formato válido")
     private BigDecimal unitPrice;
+
+    private boolean taxable = true;
 
     public InvoiceLineRequestDto() {
     }
 
     public InvoiceLineRequestDto(String description, BigDecimal quantity, BigDecimal unitPrice) {
+        this(description, quantity, unitPrice, true);
+    }
+
+    public InvoiceLineRequestDto(String description, BigDecimal quantity, BigDecimal unitPrice, boolean taxable) {
         this.description = description;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
+        this.taxable = taxable;
     }
 
     public String description() {
@@ -47,6 +53,10 @@ public class InvoiceLineRequestDto {
 
     public BigDecimal unitPrice() {
         return unitPrice;
+    }
+
+    public boolean taxable() {
+        return taxable;
     }
 
 }

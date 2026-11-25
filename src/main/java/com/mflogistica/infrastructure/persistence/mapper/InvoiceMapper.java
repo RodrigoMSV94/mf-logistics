@@ -2,6 +2,7 @@ package com.mflogistica.infrastructure.persistence.mapper;
 
 import com.mflogistica.domain.model.Invoice;
 import com.mflogistica.domain.model.InvoiceLine;
+import com.mflogistica.domain.model.FiscalData;
 import com.mflogistica.infrastructure.persistence.entity.InvoiceEntity;
 import com.mflogistica.infrastructure.persistence.entity.InvoiceLineEntity;
 import org.springframework.stereotype.Component;
@@ -15,16 +16,20 @@ public class InvoiceMapper {
     public Invoice toDomain(InvoiceEntity entity) {
         List<InvoiceLine> lines = entity.getLines().stream()
                 .map(line -> new InvoiceLine(line.getId(), line.getDescription(), line.getQuantity(),
-                        line.getUnitPrice(), line.getTotalAmount()))
+                        line.getUnitPrice(), line.getTotalAmount(), line.isTaxable()))
                 .toList();
         return new Invoice(entity.getId(), entity.getInvoiceNumber(), entity.getClientName(), entity.getClientNif(),
                 entity.getClientAddress(), entity.getIssueDate(), entity.getSubtotal(), entity.getTaxRate(),
                 entity.getTaxAmount(), valueOrZero(entity.getIrpfRate()), valueOrZero(entity.getTotalRetentions()),
-                entity.getTotalAmount(), lines);
+                entity.getTotalAmount(), lines, new FiscalData(entity.getIssuerName(), entity.getIssuerNif(),
+                entity.getIssuerAddress(), entity.getIssuerPhone(), entity.getIssuerEmail(), entity.getIssuerIban()));
     }
 
     public InvoiceEntity toEntity(Invoice domain) {
-        InvoiceEntity entity = new InvoiceEntity();
+        return updateEntity(domain, new InvoiceEntity());
+    }
+
+    public InvoiceEntity updateEntity(Invoice domain, InvoiceEntity entity) {
         entity.setId(domain.id());
         entity.setInvoiceNumber(domain.invoiceNumber());
         entity.setClientName(domain.clientName());
@@ -37,7 +42,14 @@ public class InvoiceMapper {
         entity.setIrpfRate(domain.irpfRate());
         entity.setTotalRetentions(domain.totalRetentions());
         entity.setTotalAmount(domain.totalAmount());
+        entity.setIssuerName(domain.issuerSnapshot().issuerName());
+        entity.setIssuerNif(domain.issuerSnapshot().nif());
+        entity.setIssuerAddress(domain.issuerSnapshot().address());
+        entity.setIssuerPhone(domain.issuerSnapshot().phone());
+        entity.setIssuerEmail(domain.issuerSnapshot().email());
+        entity.setIssuerIban(domain.issuerSnapshot().iban());
         entity.setConcept(domain.lines().isEmpty() ? "Factura sin líneas" : domain.lines().getFirst().description());
+        entity.getLines().clear();
         domain.lines().forEach(line -> entity.addLine(toEntity(line)));
         return entity;
     }
@@ -49,6 +61,7 @@ public class InvoiceMapper {
         entity.setQuantity(line.quantity());
         entity.setUnitPrice(line.unitPrice());
         entity.setTotalAmount(line.totalAmount());
+        entity.setTaxable(line.taxable());
         return entity;
     }
 

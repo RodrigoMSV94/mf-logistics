@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -14,11 +15,14 @@ import java.util.List;
 @Getter
 public class InvoiceRequestDto {
 
+    private Long invoiceId;
+
     @NotBlank(message = "El número de factura es obligatorio")
     @Size(max = 20, message = "El número de factura no puede superar 20 caracteres")
     private String invoiceNumber;
 
     @NotNull(message = "La fecha de emisión es obligatoria")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate issueDate;
 
     @NotBlank(message = "El nombre del cliente es obligatorio")
@@ -52,6 +56,10 @@ public class InvoiceRequestDto {
         return invoiceNumber;
     }
 
+    public Long invoiceId() {
+        return invoiceId;
+    }
+
     public LocalDate issueDate() {
         return issueDate;
     }
@@ -74,6 +82,10 @@ public class InvoiceRequestDto {
 
     public void setInvoiceNumber(String invoiceNumber) {
         this.invoiceNumber = invoiceNumber;
+    }
+
+    public void setInvoiceId(Long invoiceId) {
+        this.invoiceId = invoiceId;
     }
 
     public void setIssueDate(LocalDate issueDate) {

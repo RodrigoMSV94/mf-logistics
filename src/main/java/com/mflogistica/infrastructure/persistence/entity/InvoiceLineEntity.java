@@ -40,4 +40,7 @@ public class InvoiceLineEntity {
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(nullable = false)
+    private boolean taxable = true;
+
 }

@@ -2,6 +2,7 @@ package com.mflogistica.infrastructure.pdf;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
+import com.lowagie.text.Chunk;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
 import com.lowagie.text.FontFactory;
@@ -44,14 +45,6 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd / MM / yyyy");
     private static final float SUMMARY_TOP_FROM_BOTTOM = 367;
     private static final String LOGO_PATH = "static/images/mf-logo-transparent.png";
-    private static final String ISSUER_NAME = "MARTHA DENISSE CARRILLO TOVAR";
-    private static final String ISSUER_NIF = "Y8023499D";
-    private static final String ISSUER_ADDRESS = "Carrer del Pintor Huguet, 1\n"
-            + "17310 Lloret de Mar (Girona, España)";
-    private static final String ISSUER_PHONE = "+34 664 008 020";
-    private static final String ISSUER_EMAIL = "denissecarrillo1986@gmail.com";
-    private static final String IBAN = "ES50 2100 8137 8902 0047 3817";
-
     @Override
     public byte[] generateInvoicePdf(Invoice invoice) {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -85,7 +78,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
     }
 
     private void addHeader(Document document, Invoice invoice, Image logo) throws DocumentException {
-        PdfPTable header = new PdfPTable(new float[]{1.25f, 6.35f, 5.4f});
+        PdfPTable header = new PdfPTable(new float[]{1.7f, 5.9f, 5.4f});
         header.setWidthPercentage(100);
         header.setSpacingAfter(16);
 
@@ -94,22 +87,10 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         logoCell.setPadding(0);
         logoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
-        PdfPTable logoFrame = new PdfPTable(1);
-        logoFrame.setTotalWidth(52);
-        logoFrame.setLockedWidth(true);
-        logoFrame.setHorizontalAlignment(Element.ALIGN_LEFT);
-        PdfPCell logoFrameCell = new PdfPCell();
-        logoFrameCell.setFixedHeight(52);
-        logoFrameCell.setBorder(Rectangle.NO_BORDER);
-        logoFrameCell.setPadding(4);
-        logoFrameCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        logoFrameCell.setCellEvent(new RoundedCellEvent(INK, PINK, 10));
         Image headerLogo = Image.getInstance(logo);
-        headerLogo.scaleToFit(43, 43);
+        headerLogo.scaleToFit(68, 68);
         headerLogo.setAlignment(Element.ALIGN_CENTER);
-        logoFrameCell.addElement(headerLogo);
-        logoFrame.addCell(logoFrameCell);
-        logoCell.addElement(logoFrame);
+        logoCell.addElement(headerLogo);
         header.addCell(logoCell);
 
         PdfPCell brandCell = borderlessCell();
@@ -129,10 +110,6 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
                 Element.ALIGN_RIGHT, 4);
         addParagraph(metaCell, "Fecha emisión: " + DATE_FORMAT.format(invoice.issueDate()),
                 font(8.5f, Font.NORMAL, MUTED), Element.ALIGN_RIGHT, 1);
-        addParagraph(metaCell, "Vencimiento: A la vista / Inmediato",
-                font(8.5f, Font.NORMAL, MUTED), Element.ALIGN_RIGHT, 1);
-        addParagraph(metaCell, "Régimen: General IVA (Península)",
-                font(8.5f, Font.NORMAL, MUTED), Element.ALIGN_RIGHT, 0);
         header.addCell(metaCell);
 
         document.add(header);
@@ -145,13 +122,14 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         parties.setSpacingBefore(13);
         parties.setSpacingAfter(16);
         parties.setKeepTogether(true);
+        var issuer = invoice.issuerSnapshot();
         parties.addCell(partyCell(
                 "EMISOR / PRESTADOR",
-                "NIF " + ISSUER_NIF,
-                ISSUER_NAME,
-                "MF LOGÍSTICA\n" + ISSUER_ADDRESS
-                        + "\nTeléfono: " + ISSUER_PHONE
-                        + "\nEmail: " + ISSUER_EMAIL
+                "NIF " + issuer.nif(),
+                issuer.issuerName(),
+                issuer.address()
+                        + "\nTeléfono: " + issuer.phone()
+                        + "\nEmail: " + issuer.email()
         ));
         PdfPCell gap = new PdfPCell();
         gap.setBorder(Rectangle.NO_BORDER);
@@ -207,10 +185,13 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
 
         int lineNumber = 1;
         for (InvoiceLine line : invoice.lines()) {
+            if (!line.taxable()) {
+                continue;
+            }
             Color rowBackground = lineNumber % 2 == 0 ? SOFT : Color.WHITE;
             addTextCell(items, String.format("%02d", lineNumber), font(8, Font.BOLD, MUTED, FontFactory.COURIER),
                     Element.ALIGN_CENTER, Rectangle.BOTTOM, BORDER, 9, 5, 9, 5, rowBackground);
-            addTextCell(items, line.description(), font(8.5f, Font.BOLD, INK),
+            addMultilineTextCell(items, line.description(), font(8.5f, Font.BOLD, INK),
                     Element.ALIGN_LEFT, Rectangle.BOTTOM, BORDER, 9, 5, 9, 5, rowBackground);
             addTextCell(items, line.quantity().stripTrailingZeros().toPlainString(), font(8, Font.NORMAL, INK),
                     Element.ALIGN_CENTER, Rectangle.BOTTOM, BORDER, 9, 5, 9, 5, rowBackground);
@@ -238,11 +219,11 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
             document.add(spacer);
         }
 
-        PdfPTable summary = new PdfPTable(new float[]{1.15f, 0.06f, 0.85f});
+        PdfPTable summary = new PdfPTable(new float[]{0.85f, 0.06f, 1.15f});
         summary.setWidthPercentage(100);
         summary.setSpacingAfter(14);
         summary.setKeepTogether(true);
-        summary.addCell(paymentCard());
+        summary.addCell(paymentCard(invoice.issuerSnapshot()));
         PdfPCell gap = new PdfPCell();
         gap.setBorder(Rectangle.NO_BORDER);
         summary.addCell(gap);
@@ -250,7 +231,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         document.add(summary);
     }
 
-    private PdfPCell paymentCard() {
+    private PdfPCell paymentCard(com.mflogistica.domain.model.FiscalData issuer) {
         PdfPCell card = new PdfPCell();
         card.setBorder(Rectangle.NO_BORDER);
         card.setBackgroundColor(SAND);
@@ -273,9 +254,9 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         iban.setPadding(9);
         iban.setPaddingTop(6);
         iban.setPaddingBottom(6);
-        iban.addElement(new Paragraph("CÓDIGO INTERNACIONAL DE CUENTA (IBAN)",
+        iban.addElement(new Paragraph("IBAN",
                 font(7, Font.BOLD, new Color(0x8A, 0x7B, 0x6C))));
-        Paragraph ibanValue = new Paragraph(IBAN, font(10, Font.BOLD, INK, FontFactory.COURIER));
+        Paragraph ibanValue = new Paragraph(issuer.iban(), font(10, Font.BOLD, INK, FontFactory.COURIER));
         ibanValue.setSpacingBefore(3);
         iban.addElement(ibanValue);
         PdfPTable ibanTable = new PdfPTable(1);
@@ -286,7 +267,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         Paragraph beneficiary = new Paragraph();
         beneficiary.setFont(font(7.5f, Font.NORMAL, MUTED));
         beneficiary.add(new Phrase("Beneficiario: ", font(7.5f, Font.BOLD, MUTED)));
-        beneficiary.add(new Phrase(ISSUER_NAME, font(7.5f, Font.NORMAL, MUTED)));
+        beneficiary.add(new Phrase(issuer.issuerName(), font(7.5f, Font.NORMAL, MUTED)));
         beneficiary.setSpacingBefore(5);
         card.addElement(beneficiary);
         PdfPTable paymentTable = new PdfPTable(1);
@@ -303,12 +284,20 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
     private PdfPCell totalsCard(Invoice invoice) {
         PdfPTable totals = new PdfPTable(2);
         totals.setWidthPercentage(100);
-        addTotalRow(totals, "BASE\nIMPONIBLE", euro(invoice.subtotal()), false);
-        addTotalRow(totals, "IVA\n(" + percent(invoice.taxRate()) + ")", percent(invoice.taxRate()), false);
-        addTotalRow(totals, "TOTAL IVA\n21%", "+" + euro(invoice.taxAmount()), false);
-        addTotalRow(totals, "IRPF\n(-" + percent(invoice.irpfRate()) + ")",
-                "-" + percent(invoice.irpfRate()), true);
-        addTotalRow(totals, "TOTAL\nRETENCIONES", euro(invoice.totalRetentions()), true);
+        totals.setWidths(new float[]{1.2f, 0.8f});
+        addTotalRow(totals, "BASE IMPONIBLE", euro(invoice.subtotal()), false);
+        addTotalRow(totals, "IVA (" + percent(invoice.taxRate()) + ")", percent(invoice.taxRate()), false);
+        addTotalRow(totals, "TOTAL IVA " + invoice.taxRate().stripTrailingZeros().toPlainString() + "%",
+                euro(invoice.subtotal().add(invoice.taxAmount())), false);
+        addTotalRow(totals, "IRPF (" + percent(invoice.irpfRate()) + ")",
+                percent(invoice.irpfRate()), true);
+        addTotalRow(totals, "TOTAL RETENCIONES", euro(invoice.totalRetentions()), true);
+        invoice.lines().stream()
+                .filter(line -> !line.taxable())
+                .forEach(line -> addTotalRow(totals,
+                        outsideBaseLabel(line.description()),
+                        euro(line.totalAmount()),
+                        line.totalAmount().signum() < 0));
 
         PdfPTable grandTotalContent = new PdfPTable(new float[]{0.72f, 1.28f});
         grandTotalContent.setWidthPercentage(100);
@@ -404,6 +393,34 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         table.addCell(cell);
     }
 
+    private void addMultilineTextCell(PdfPTable table, String text, Font font, int alignment, int border,
+                                      Color borderColor, float paddingTop, float paddingRight,
+                                      float paddingBottom, float paddingLeft, Color background) {
+        Phrase phrase = new Phrase();
+        String[] lines = text.split("\\R", -1);
+        for (int index = 0; index < lines.length; index++) {
+            if (index > 0) {
+                phrase.add(Chunk.NEWLINE);
+            }
+            phrase.add(new Chunk(lines[index], font));
+        }
+        PdfPCell cell = new PdfPCell(phrase);
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setBorder(border);
+        if (borderColor != null) {
+            cell.setBorderColor(borderColor);
+        }
+        if (background != null) {
+            cell.setBackgroundColor(background);
+        }
+        cell.setPaddingTop(paddingTop);
+        cell.setPaddingRight(paddingRight);
+        cell.setPaddingBottom(paddingBottom);
+        cell.setPaddingLeft(paddingLeft);
+        table.addCell(cell);
+    }
+
     private PdfPCell borderlessCell() {
         PdfPCell cell = new PdfPCell();
         cell.setBorder(Rectangle.NO_BORDER);
@@ -426,6 +443,15 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
 
     private String percent(BigDecimal value) {
         return number(value) + "%";
+    }
+
+    private String outsideBaseLabel(String description) {
+        if (description == null) {
+            return "";
+        }
+        String normalized = description.trim();
+        int separator = normalized.lastIndexOf(" - ");
+        return separator >= 0 ? normalized.substring(separator + 3).trim() : normalized;
     }
 
     private String number(BigDecimal value) {

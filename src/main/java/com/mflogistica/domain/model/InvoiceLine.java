@@ -7,6 +7,10 @@ public record InvoiceLine(
         String description,
         BigDecimal quantity,
         BigDecimal unitPrice,
-        BigDecimal totalAmount
+        BigDecimal totalAmount,
+        boolean taxable
 ) {
+    public InvoiceLine(Long id, String description, BigDecimal quantity, BigDecimal unitPrice, BigDecimal totalAmount) {
+        this(id, description, quantity, unitPrice, totalAmount, true);
+    }
 }

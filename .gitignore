@@ -17,10 +17,18 @@ build/
 *.zip
 *.tar.gz
 *.rar
+/release/
 
 # JVM crash logs
 hs_err_pid*
 replay_pid*
+
+# Local logs and database backups
+/logs/
+*.dump
+*.backup
+*.bak
+*.sql.gz
 
 # IDE - IntelliJ
 .idea/
@@ -38,10 +46,12 @@ Thumbs.db
 # Environment / local config
 .env
 .env.*
+.env.example
+!.env.example
 application-local.yml
 application-*.local.yml
 application-*.example.yml
+!src/main/resources/application-local.example.yml
 
 # Maven wrapper cache (keep wrapper scripts/jar if you add them)
 .mvn/wrapper/maven-wrapper.jar
-

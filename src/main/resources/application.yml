@@ -1,17 +1,21 @@
 server:
   port: ${PORT:8080}
+  servlet:
+    session:
+      timeout: 20m
 
 spring:
   application:
     name: mf-logistica
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/mflogistica}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
+    open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -21,11 +25,14 @@ spring:
             non_contextual_creation: true
   thymeleaf:
     cache: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
 app:
+  local-data-reset:
+    enabled: ${APP_LOCAL_DATA_RESET_ENABLED:false}
   security:
     admin:
-      email: ${APP_ADMIN_EMAIL:admin@mflogistica.es}
-      password: ${APP_ADMIN_PASSWORD:Admin1234!}
-      full-name: ${APP_ADMIN_FULL_NAME:Administrador MF}
-
+      username: ${APP_ADMIN_USERNAME}
+      password: ${APP_ADMIN_PASSWORD}
+      full-name: ${APP_ADMIN_FULL_NAME}

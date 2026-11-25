@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+    <changeSet id="20261125-01-create-schema" author="copilot">
+        <createTable tableName="users">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_users"/>
+            </column>
+            <column name="username" type="varchar(150)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_users_username"/>
+            </column>
+            <column name="password" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="full_name" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="invoices">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_invoices"/>
+            </column>
+            <column name="invoice_number" type="varchar(20)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_invoices_invoice_number"/>
+            </column>
+            <column name="client_name" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_nif" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_address" type="varchar(255)"/>
+            <column name="issue_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subtotal" type="numeric(14, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tax_rate" type="numeric(5, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tax_amount" type="numeric(14, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="irpf_rate" type="numeric(5, 2)"/>
+            <column name="total_retentions" type="numeric(14, 2)"/>
+            <column name="total_amount" type="numeric(14, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="concept" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issuer_name" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issuer_nif" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issuer_address" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issuer_phone" type="varchar(40)"/>
+            <column name="issuer_email" type="varchar(150)"/>
+            <column name="issuer_iban" type="varchar(34)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="invoice_lines">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_invoice_lines"/>
+            </column>
+            <column name="invoice_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="numeric(12, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unit_price" type="numeric(14, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_amount" type="numeric(14, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="taxable" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="invoice_lines"
+                                 baseColumnNames="invoice_id"
+                                 referencedTableName="invoices"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_invoice_lines_invoice"/>
+
+        <createTable tableName="clients">
+            <column name="client_nif" type="varchar(20)">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_clients"/>
+            </column>
+            <column name="client_name" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_address" type="varchar(255)"/>
+        </createTable>
+
+        <createTable tableName="fiscal_data">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_fiscal_data"/>
+            </column>
+            <column name="issuer_name" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="nif" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phone" type="varchar(40)"/>
+            <column name="email" type="varchar(150)"/>
+            <column name="iban" type="varchar(34)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20261125-02-seed-initial-data" author="copilot">
+        <insert tableName="clients">
+            <column name="client_nif" value="73025558Y"/>
+            <column name="client_name" value="SAÚL GUERRERO LÓPEZ"/>
+            <column name="client_address"
+                    value="Contrato Logístico Operativo&#10;Carrer Comanegra, 3&#10;17252 Calonge (Girona, España)"/>
+        </insert>
+        <insert tableName="fiscal_data">
+            <column name="id" valueNumeric="1"/>
+            <column name="issuer_name" value="MARTHA DENISSE CARRILLO TOVAR"/>
+            <column name="nif" value="Y8023499D"/>
+            <column name="address" value="Carrer del Pintor Huguet, 1&#10;17310 Lloret de Mar (Girona, España)"/>
+            <column name="phone" value="+34 664 008 020"/>
+            <column name="email" value="denissecarrillo1986@gmail.com"/>
+            <column name="iban" value="ES50 2100 8137 8902 0047 3817"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

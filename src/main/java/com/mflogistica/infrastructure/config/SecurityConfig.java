@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 import java.util.List;
 
@@ -29,24 +30,30 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .defaultSuccessUrl("/dashboard/facturas", true)
                         .failureUrl("/login?error")
                         .permitAll())
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout")
                         .permitAll())
-                .rememberMe(Customizer.withDefaults())
+                .sessionManagement(session -> session
+                        .sessionFixation(sessionFixation -> sessionFixation.changeSessionId()))
                 .csrf(Customizer.withDefaults())
                 .headers(headers -> headers
-                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
+                        .contentTypeOptions(Customizer.withDefaults())
+                        .referrerPolicy(referrer -> referrer
+                                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicy(permissions -> permissions
+                                .policy("camera=(), microphone=(), geolocation=()")));
 
         return http.build();
     }
 
     @Bean
     public UserDetailsService userDetailsService(UserRepositoryPort userRepositoryPort) {
-        return username -> userRepositoryPort.findByEmail(username)
-                .map(user -> User.withUsername(user.email())
+        return username -> userRepositoryPort.findByUsername(username)
+                .map(user -> User.withUsername(user.username())
                         .password(user.password())
                         .authorities(List.of(new SimpleGrantedAuthority(user.role())))
                         .build())
@@ -67,4 +74,3 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
-
