@@ -185,6 +185,9 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
 
         int lineNumber = 1;
         for (InvoiceLine line : invoice.lines()) {
+            if (!line.taxable()) {
+                continue;
+            }
             Color rowBackground = lineNumber % 2 == 0 ? SOFT : Color.WHITE;
             addTextCell(items, String.format("%02d", lineNumber), font(8, Font.BOLD, MUTED, FontFactory.COURIER),
                     Element.ALIGN_CENTER, Rectangle.BOTTOM, BORDER, 9, 5, 9, 5, rowBackground);
@@ -216,7 +219,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
             document.add(spacer);
         }
 
-        PdfPTable summary = new PdfPTable(new float[]{1.15f, 0.06f, 0.85f});
+        PdfPTable summary = new PdfPTable(new float[]{0.85f, 0.06f, 1.15f});
         summary.setWidthPercentage(100);
         summary.setSpacingAfter(14);
         summary.setKeepTogether(true);
@@ -251,7 +254,7 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         iban.setPadding(9);
         iban.setPaddingTop(6);
         iban.setPaddingBottom(6);
-        iban.addElement(new Paragraph("CÓDIGO INTERNACIONAL DE CUENTA (IBAN)",
+        iban.addElement(new Paragraph("IBAN",
                 font(7, Font.BOLD, new Color(0x8A, 0x7B, 0x6C))));
         Paragraph ibanValue = new Paragraph(issuer.iban(), font(10, Font.BOLD, INK, FontFactory.COURIER));
         ibanValue.setSpacingBefore(3);
@@ -289,6 +292,12 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
         addTotalRow(totals, "IRPF (" + percent(invoice.irpfRate()) + ")",
                 percent(invoice.irpfRate()), true);
         addTotalRow(totals, "TOTAL RETENCIONES", euro(invoice.totalRetentions()), true);
+        invoice.lines().stream()
+                .filter(line -> !line.taxable())
+                .forEach(line -> addTotalRow(totals,
+                        outsideBaseLabel(line.description()),
+                        euro(line.totalAmount()),
+                        line.totalAmount().signum() < 0));
 
         PdfPTable grandTotalContent = new PdfPTable(new float[]{0.72f, 1.28f});
         grandTotalContent.setWidthPercentage(100);
@@ -434,6 +443,15 @@ public class OpenPdfGeneratorAdapter implements PdfGeneratorPort {
 
     private String percent(BigDecimal value) {
         return number(value) + "%";
+    }
+
+    private String outsideBaseLabel(String description) {
+        if (description == null) {
+            return "";
+        }
+        String normalized = description.trim();
+        int separator = normalized.lastIndexOf(" - ");
+        return separator >= 0 ? normalized.substring(separator + 3).trim() : normalized;
     }
 
     private String number(BigDecimal value) {

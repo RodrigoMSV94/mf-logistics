@@ -3,6 +3,7 @@ package com.mflogistica.infrastructure.persistence.repository;
 import com.mflogistica.application.port.InvoiceRepositoryPort;
 import com.mflogistica.application.dto.InvoiceSearchResultDto;
 import com.mflogistica.domain.model.Invoice;
+import com.mflogistica.domain.model.InvoiceSummary;
 import com.mflogistica.infrastructure.persistence.entity.InvoiceEntity;
 import com.mflogistica.infrastructure.persistence.mapper.InvoiceMapper;
 import org.springframework.data.domain.PageRequest;
@@ -46,10 +47,8 @@ public class InvoiceRepositoryAdapter implements InvoiceRepositoryPort {
     }
 
     @Override
-    public List<Invoice> findRecent(int limit) {
-        return springDataInvoiceRepository.findAllByOrderByIssueDateDescIdDesc(PageRequest.of(0, limit)).stream()
-                .map(invoiceMapper::toDomain)
-                .toList();
+    public List<InvoiceSummary> findRecent(int limit) {
+        return springDataInvoiceRepository.findRecentSummaries(PageRequest.of(0, limit));
     }
 
     @Override
@@ -70,9 +69,8 @@ public class InvoiceRepositoryAdapter implements InvoiceRepositoryPort {
 
     @Override
     public InvoiceSearchResultDto search(String term, LocalDate from, LocalDate to, int page, int size) {
-        Page<InvoiceEntity> result = springDataInvoiceRepository.search(term, from, to, PageRequest.of(page, size));
-        return new InvoiceSearchResultDto(result.getContent().stream().map(invoiceMapper::toDomain).toList(),
-                result.getTotalElements());
+        Page<InvoiceSummary> result = springDataInvoiceRepository.search(term, from, to, PageRequest.of(page, size));
+        return new InvoiceSearchResultDto(result.getContent(), result.getTotalElements());
     }
 
 }

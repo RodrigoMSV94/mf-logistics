@@ -16,7 +16,7 @@ public class InvoiceMapper {
     public Invoice toDomain(InvoiceEntity entity) {
         List<InvoiceLine> lines = entity.getLines().stream()
                 .map(line -> new InvoiceLine(line.getId(), line.getDescription(), line.getQuantity(),
-                        line.getUnitPrice(), line.getTotalAmount()))
+                        line.getUnitPrice(), line.getTotalAmount(), line.isTaxable()))
                 .toList();
         return new Invoice(entity.getId(), entity.getInvoiceNumber(), entity.getClientName(), entity.getClientNif(),
                 entity.getClientAddress(), entity.getIssueDate(), entity.getSubtotal(), entity.getTaxRate(),
@@ -61,6 +61,7 @@ public class InvoiceMapper {
         entity.setQuantity(line.quantity());
         entity.setUnitPrice(line.unitPrice());
         entity.setTotalAmount(line.totalAmount());
+        entity.setTaxable(line.taxable());
         return entity;
     }
 

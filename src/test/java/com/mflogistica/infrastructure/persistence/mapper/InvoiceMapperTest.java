@@ -22,8 +22,8 @@ class InvoiceMapperTest {
                 LocalDate.of(2026, 10, 30), new BigDecimal("100.00"), new BigDecimal("21.00"),
                 new BigDecimal("21.00"), new BigDecimal("1.00"), new BigDecimal("-1.00"),
                 new BigDecimal("120.00"),
-                List.of(new InvoiceLine(1L, "Servicio", BigDecimal.ONE, new BigDecimal("100.00"),
-                        new BigDecimal("100.00"))),
+                List.of(new InvoiceLine(1L, "Penalización", BigDecimal.ONE, new BigDecimal("-20.00"),
+                        new BigDecimal("-20.00"), false)),
                 issuer);
         InvoiceMapper mapper = new InvoiceMapper();
 
@@ -33,5 +33,7 @@ class InvoiceMapperTest {
         assertEquals(issuer, restored.issuerSnapshot());
         assertEquals("Emisor Histórico", entity.getIssuerName());
         assertEquals("ES1234567890123456789012", entity.getIssuerIban());
+        assertEquals(false, restored.lines().getFirst().taxable());
+        assertEquals(false, entity.getLines().getFirst().isTaxable());
     }
 }

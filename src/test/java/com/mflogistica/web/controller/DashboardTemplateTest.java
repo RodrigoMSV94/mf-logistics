@@ -6,12 +6,15 @@ import com.mflogistica.application.dto.InvoiceRequestDto;
 import com.mflogistica.application.dto.InvoiceLineRequestDto;
 import com.mflogistica.application.service.ClientService;
 import com.mflogistica.application.service.InvoiceService;
+import com.mflogistica.application.port.UserRepositoryPort;
 import com.mflogistica.domain.model.Client;
 import com.mflogistica.domain.exception.DuplicateInvoiceNumberException;
+import com.mflogistica.infrastructure.config.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -30,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @WebMvcTest(DashboardController.class)
+@Import(SecurityConfig.class)
 class DashboardTemplateTest {
 
     @Autowired
@@ -40,6 +44,24 @@ class DashboardTemplateTest {
 
     @MockBean
     private ClientService clientService;
+
+    @MockBean
+    private UserRepositoryPort userRepositoryPort;
+
+    @Test
+    void shouldProtectDashboardAndRequireCsrfForMutations() throws Exception {
+        mockMvc.perform(get("/dashboard"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .redirectedUrlPattern("**/login"));
+
+        mockMvc.perform(get("/dashboard").with(user("read-only").roles("USER")))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/dashboard/invoices")
+                        .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isForbidden());
+    }
 
     @Test
     void shouldRenderDashboardAndFormatEuroAmounts() throws Exception {
@@ -76,6 +98,10 @@ class DashboardTemplateTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("clientAddress.value = '';")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"" + LocalDate.now() + "\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("lines0.description")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Tratamiento fiscal")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Indemnización / fuera de base")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("outsideTaxBaseSummary")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("IVA (21,00%)")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("IRPF (1,00%)")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(

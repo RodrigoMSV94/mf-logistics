@@ -35,9 +35,13 @@ class OpenPdfGeneratorAdapterTest {
                 new BigDecimal("1148.10"),
                 new BigDecimal("1.00"),
                 new BigDecimal("-54.67"),
-                new BigDecimal("6560.58"),
-                List.of(new InvoiceLine(1L, "Servicio de reparto\nRuta Girona", BigDecimal.ONE,
-                        new BigDecimal("5467.15"), new BigDecimal("5467.15"))),
+                new BigDecimal("6440.58"),
+                List.of(
+                        new InvoiceLine(1L, "Servicio de reparto\nRuta Girona", BigDecimal.ONE,
+                                new BigDecimal("5467.15"), new BigDecimal("5467.15")),
+                        new InvoiceLine(2L, "Penalización", new BigDecimal("4"), new BigDecimal("-30.00"),
+                                new BigDecimal("-120.00"), false)
+                ),
                 new FiscalData("MARTHA DENISSE CARRILLO TOVAR", "Y8023499D",
                         "Carrer del Pintor Huguet, 1\n17310 Lloret de Mar (Girona, España)",
                         "+34 664 008 020", "denissecarrillo1986@gmail.com",
@@ -69,6 +73,7 @@ class OpenPdfGeneratorAdapterTest {
         assertTrue(text.contains("MARTHA DENISSE CARRILLO TOVAR"));
         assertTrue(text.contains("Y8023499D"));
         assertTrue(text.contains("ES50 2100 8137 8902 0047 3817"));
+        assertTrue(text.contains("IBAN"));
         assertTrue(text.contains("BASE IMPONIBLE"));
         assertTrue(text.contains("IVA (21,00%)"), text);
         assertTrue(text.contains("21,00%"), text);
@@ -77,7 +82,11 @@ class OpenPdfGeneratorAdapterTest {
         assertTrue(text.contains("IRPF (1,00%)"), text);
         assertTrue(text.contains("TOTAL RETENCIONES"), text);
         assertTrue(text.contains("-54,67 €"), text);
-        assertTrue(text.contains("6.560,58 €"));
+        assertTrue(text.contains("Penalización"), text);
+        assertTrue(text.contains("-120,00 €"), text);
+        assertTrue(!text.contains("FUERA DE BASE"), text);
+        assertTrue(!text.contains("Art. 78.Tres.1 Ley 37/1992"), text);
+        assertTrue(text.contains("6.440,58 €"), text);
         assertTrue(!text.contains("Vencimiento: A la vista / Inmediato"));
         assertTrue(!text.contains("Régimen: General IVA (Península)"));
     }
