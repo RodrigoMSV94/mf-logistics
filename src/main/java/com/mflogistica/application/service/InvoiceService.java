@@ -10,6 +10,7 @@ import com.mflogistica.application.port.PdfGeneratorPort;
 import com.mflogistica.domain.exception.BusinessException;
 import com.mflogistica.domain.exception.DuplicateInvoiceNumberException;
 import com.mflogistica.domain.model.Invoice;
+import com.mflogistica.domain.model.InvoiceSummary;
 import com.mflogistica.domain.model.InvoiceLine;
 import com.mflogistica.domain.model.FiscalData;
 import org.springframework.stereotype.Service;
@@ -73,20 +74,23 @@ public class InvoiceService {
         }
 
         List<InvoiceLine> lines = request.lines().stream().map(this::toLine).toList();
-        BigDecimal subtotal = lines.stream().map(InvoiceLine::totalAmount)
+        BigDecimal subtotal = lines.stream().filter(InvoiceLine::taxable).map(InvoiceLine::totalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal outsideTaxBase = lines.stream().filter(line -> !line.taxable()).map(InvoiceLine::totalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP);
         BigDecimal taxAmount = subtotal.multiply(VAT_RATE).divide(ONE_HUNDRED, 2, RoundingMode.HALF_UP);
         BigDecimal totalRetentions = subtotal.multiply(IRPF_RATE).divide(ONE_HUNDRED, 2, RoundingMode.HALF_UP)
                 .negate();
-        BigDecimal totalAmount = subtotal.add(taxAmount).add(totalRetentions).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = subtotal.add(taxAmount).add(totalRetentions).add(outsideTaxBase)
+                .setScale(2, RoundingMode.HALF_UP);
 
         FiscalData issuerSnapshot = request.invoiceId() == null
                 ? fiscalDataService.getCurrent()
                 : findInvoice(request.invoiceId()).issuerSnapshot();
         Invoice saved = invoiceRepositoryPort.save(new Invoice(request.invoiceId(), invoiceNumber,
                 request.clientName().trim(), request.clientNif().trim(), trimOrEmpty(request.clientAddress()),
-                request.issueDate(), subtotal, VAT_RATE, taxAmount, IRPF_RATE, totalRetentions, totalAmount, lines,
-                issuerSnapshot));
+                request.issueDate(), subtotal, VAT_RATE, taxAmount, IRPF_RATE, totalRetentions, totalAmount,
+                lines, issuerSnapshot));
         clientService.saveFromInvoice(saved.clientName(), saved.clientNif(), saved.clientAddress());
         return toResponse(saved);
     }
@@ -127,7 +131,8 @@ public class InvoiceService {
         InvoiceRequestDto request = new InvoiceRequestDto(invoice.invoiceNumber(), invoice.issueDate(),
                 invoice.clientName(), invoice.clientNif(), invoice.clientAddress(),
                 invoice.lines().stream()
-                        .map(line -> new InvoiceLineRequestDto(line.description(), line.quantity(), line.unitPrice()))
+                        .map(line -> new InvoiceLineRequestDto(line.description(), line.quantity(), line.unitPrice(),
+                                line.taxable()))
                         .toList());
         request.setInvoiceId(invoice.id());
         return request;
@@ -167,7 +172,7 @@ public class InvoiceService {
         BigDecimal quantity = scale2(line.quantity());
         BigDecimal unitPrice = scale2(line.unitPrice());
         return new InvoiceLine(null, line.description().trim(), quantity, unitPrice,
-                quantity.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP));
+                quantity.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP), line.taxable());
     }
 
     private BigDecimal scale2(BigDecimal value) {
@@ -183,5 +188,11 @@ public class InvoiceService {
                 invoice.issueDate(), invoice.subtotal(), invoice.taxRate(), invoice.taxAmount(), invoice.irpfRate(),
                 invoice.totalRetentions(), invoice.totalAmount(),
                 invoice.lines().isEmpty() ? "" : invoice.lines().getFirst().description());
+    }
+
+    private InvoiceResponseDto toResponse(InvoiceSummary invoice) {
+        return new InvoiceResponseDto(invoice.id(), invoice.invoiceNumber(), invoice.clientName(), invoice.clientNif(),
+                invoice.issueDate(), invoice.subtotal(), invoice.taxRate(), invoice.taxAmount(), invoice.irpfRate(),
+                invoice.totalRetentions(), invoice.totalAmount(), invoice.concept());
     }
 }

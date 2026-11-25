@@ -26,11 +26,13 @@ class InvoiceRequestDtoBindingTest {
         values.add("lines[0].description", "Servicio de reparto");
         values.add("lines[0].quantity", new BigDecimal("1"));
         values.add("lines[0].unitPrice", new BigDecimal("100"));
+        values.add("lines[0].taxable", "false");
 
         binder.bind(values);
 
         assertEquals("FAC-2026-0001", request.invoiceNumber());
         assertEquals("Servicio de reparto", request.lines().getFirst().description());
         assertEquals(new BigDecimal("100"), request.lines().getFirst().unitPrice());
+        assertEquals(false, request.lines().getFirst().taxable());
     }
 }

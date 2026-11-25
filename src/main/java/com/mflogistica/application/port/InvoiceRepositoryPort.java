@@ -2,6 +2,7 @@ package com.mflogistica.application.port;
 
 import com.mflogistica.application.dto.InvoiceSearchResultDto;
 import com.mflogistica.domain.model.Invoice;
+import com.mflogistica.domain.model.InvoiceSummary;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,7 +16,7 @@ public interface InvoiceRepositoryPort {
 
     Optional<Invoice> findById(Long id);
 
-    List<Invoice> findRecent(int limit);
+    List<InvoiceSummary> findRecent(int limit);
 
     Optional<String> findLatestInvoiceNumber(String yearPrefix);
 

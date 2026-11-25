@@ -22,15 +22,23 @@ class LiquibaseDefaultClientChangelogTest {
                 .parse("db/changelog/db.changelog-master.xml", new ChangeLogParameters(), resourceAccessor);
         String changelogContent = new ClassPathResource("db/changelog/db.changelog-master.xml")
                 .getContentAsString(StandardCharsets.UTF_8);
+        String initialSchemaContent = new ClassPathResource(
+                "db/changelog/20261125-01-initial-schema.xml")
+                .getContentAsString(StandardCharsets.UTF_8);
 
-        assertEquals(5, changeLog.getChangeSets().size());
-        assertTrue(changelogContent.contains("73025558Y"));
-        assertTrue(changelogContent.contains("SAÚL GUERRERO LÓPEZ"));
-        assertTrue(changelogContent.contains("20261030-04-snapshot-invoice-issuer"));
-        assertTrue(changelogContent.contains("Y8023499D"));
-        assertTrue(changelogContent.contains("<update tableName=\"invoices\">"));
-        assertTrue(changelogContent.contains("columnName=\"issuer_name\""));
-        assertTrue(changelogContent.contains("20261030-05-email-to-username"));
-        assertTrue(changelogContent.contains("newColumnName=\"username\""));
+        assertEquals(2, changeLog.getChangeSets().size());
+        assertTrue(changelogContent.contains("20261125-01-initial-schema.xml"));
+        assertTrue(initialSchemaContent.contains("20261125-01-create-schema"));
+        assertTrue(initialSchemaContent.contains("20261125-02-seed-initial-data"));
+        assertTrue(initialSchemaContent.contains("tableName=\"users\""));
+        assertTrue(initialSchemaContent.contains("tableName=\"invoices\""));
+        assertTrue(initialSchemaContent.contains("tableName=\"invoice_lines\""));
+        assertTrue(initialSchemaContent.contains("tableName=\"clients\""));
+        assertTrue(initialSchemaContent.contains("tableName=\"fiscal_data\""));
+        assertTrue(initialSchemaContent.contains("name=\"taxable\""));
+        assertTrue(initialSchemaContent.contains("name=\"issuer_name\""));
+        assertTrue(initialSchemaContent.contains("73025558Y"));
+        assertTrue(initialSchemaContent.contains("SAÚL GUERRERO LÓPEZ"));
+        assertTrue(initialSchemaContent.contains("Y8023499D"));
     }
 }

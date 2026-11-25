@@ -60,6 +60,9 @@
                class="flex items-center gap-4 rounded-lg px-4 py-3 font-bold hover:bg-[#f1ede8]">
                 <span class="material-symbols-outlined">account_balance</span>Datos fiscales
             </a>
+            <a th:href="@{/dashboard/seguridad}" class="flex items-center gap-4 rounded-lg px-4 py-3 font-bold hover:bg-[#f1ede8]">
+                <span class="material-symbols-outlined">lock</span>Seguridad
+            </a>
         </nav>
         <div class="mt-auto flex items-center gap-3 rounded-xl bg-[#f1ede8] p-4 text-sm">
             <span class="material-symbols-outlined grid h-10 w-10 place-items-center rounded-full bg-black text-white">person</span>
@@ -156,7 +159,7 @@
                             </div>
                         </section>
                         <section><div class="flex flex-wrap items-center justify-between gap-3"><h3 class="text-lg font-extrabold uppercase sm:text-xl">● &nbsp;2. Líneas de factura</h3><button id="addLine" type="button" class="rounded-lg bg-[#f1ede8] px-4 py-2 text-sm font-bold">＋ Añadir línea</button></div>
-                            <div id="invoiceLines" class="mt-6 space-y-4"><div th:each="line, status : *{lines}" class="invoice-line grid gap-3 rounded-xl bg-[#f7f3ee] p-4 lg:grid-cols-[minmax(0,1fr)_120px_150px_42px]"><div><label class="label">Descripción o concepto</label><textarea rows="2" th:field="*{lines[__${status.index}__].description}" class="field resize-y bg-white"></textarea><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].description')}" th:errors="*{lines[__${status.index}__].description}"></p></div><div><label class="label">Cantidad</label><input type="number" min="0.01" step="0.01" th:field="*{lines[__${status.index}__].quantity}" class="line-quantity field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].quantity')}" th:errors="*{lines[__${status.index}__].quantity}"></p></div><div><label class="label">Precio unit. (€)</label><input type="number" min="0" step="0.01" th:field="*{lines[__${status.index}__].unitPrice}" class="line-price field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].unitPrice')}" th:errors="*{lines[__${status.index}__].unitPrice}"></p></div><button type="button" class="remove-line mt-7 rounded-lg p-2 text-[#e44b7c]" title="Eliminar línea"><span class="material-symbols-outlined">delete</span></button></div></div>
+                            <div id="invoiceLines" class="mt-6 space-y-4"><div th:each="line, status : *{lines}" class="invoice-line grid gap-3 rounded-xl bg-[#f7f3ee] p-4 lg:grid-cols-[minmax(0,1fr)_120px_150px_210px_42px]"><div><label class="label">Descripción o concepto</label><textarea rows="2" th:field="*{lines[__${status.index}__].description}" class="field resize-y bg-white"></textarea><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].description')}" th:errors="*{lines[__${status.index}__].description}"></p></div><div><label class="label">Cantidad</label><input type="number" min="0.01" step="0.01" th:field="*{lines[__${status.index}__].quantity}" class="line-quantity field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].quantity')}" th:errors="*{lines[__${status.index}__].quantity}"></p></div><div><label class="label">Precio unit. (€)</label><input type="number" step="0.01" th:field="*{lines[__${status.index}__].unitPrice}" class="line-price field bg-white"><p class="error" th:if="${#fields.hasErrors('lines[' + status.index + '].unitPrice')}" th:errors="*{lines[__${status.index}__].unitPrice}"></p></div><div><label class="label">Tratamiento fiscal</label><select th:field="*{lines[__${status.index}__].taxable}" class="line-taxable field bg-white" data-indemnity-option="true"><option th:value="true">En base imponible</option><option th:value="false">Indemnización / fuera de base</option></select><p class="line-tax-hint mt-2 hidden text-xs text-[#777]">Solo para indemnizaciones reales: excluidas de la base conforme al art. 78.Tres.1 de la Ley 37/1992.</p></div><button type="button" class="remove-line mt-7 rounded-lg p-2 text-[#e44b7c]" title="Eliminar línea"><span class="material-symbols-outlined">delete</span></button></div></div>
                             <p class="error" th:if="${#fields.hasErrors('lines')}" th:errors="*{lines}"></p>
                         </section>
                         <section><h3 class="text-xl font-extrabold uppercase">● &nbsp;3. Importes e Impuestos</h3>
@@ -194,6 +197,7 @@
                             <div class="summary"><span>Total IVA 21%</span><b id="ivaSummary">0,00 €</b></div>
                             <div class="summary"><span>IRPF (1,00%)</span><b>1,00%</b></div>
                             <div class="summary"><span>Total retenciones</span><b id="retentionsSummary">0,00 €</b></div>
+                            <div id="outsideTaxBaseSummaryRow" class="summary hidden"><span>Fuera de base imponible</span><b id="outsideTaxBaseSummary">0,00 €</b></div>
                             <hr class="my-5 border-black/10">
                             <p class="font-bold">TOTAL</p>
                             <p id="totalSummary" aria-live="polite" class="total-amount mt-2 text-right text-4xl font-extrabold text-[#ec5b88]">0,00 €</p></div>
@@ -346,23 +350,43 @@ sidebar.querySelector('nav').addEventListener('click', () => {
 desktopLayout.addEventListener('change', updateSidebarForViewport);
 updateSidebarForViewport();
 function recalculate() {
-    const baseCents = [...lines.querySelectorAll('.invoice-line')].reduce((sum, line) => {
+    updateTaxHints();
+    const invoiceLines = [...lines.querySelectorAll('.invoice-line')];
+    const baseCents = invoiceLines.filter(line => line.querySelector('.line-taxable').value === 'true')
+        .reduce((sum, line) => {
         const quantity = parseFloat(line.querySelector('.line-quantity').value) || 0;
         const unitPrice = parseFloat(line.querySelector('.line-price').value) || 0;
         return sum + Math.round(quantity * unitPrice * 100);
     }, 0);
+    const outsideTaxBaseCents = invoiceLines.filter(line => line.querySelector('.line-taxable').value === 'false')
+        .reduce((sum, line) => {
+            const quantity = parseFloat(line.querySelector('.line-quantity').value) || 0;
+            const unitPrice = parseFloat(line.querySelector('.line-price').value) || 0;
+            return sum + Math.round(quantity * unitPrice * 100);
+        }, 0);
     const vatCents = Math.round(baseCents * VAT_RATE / 100);
     const retentionCents = -Math.round(baseCents * IRPF_RATE / 100);
-    const totalCents = baseCents + vatCents + retentionCents;
+    const totalCents = baseCents + vatCents + retentionCents + outsideTaxBaseCents;
     document.getElementById('subtotal').textContent = format(baseCents / 100);
     document.getElementById('baseSummary').textContent = format(baseCents / 100);
     document.getElementById('ivaSummary').textContent = format((baseCents + vatCents) / 100);
     document.getElementById('retentionsSummary').textContent = format(retentionCents / 100);
+    document.getElementById('outsideTaxBaseSummary').textContent = format(outsideTaxBaseCents / 100);
+    document.getElementById('outsideTaxBaseSummaryRow').classList.toggle('hidden', outsideTaxBaseCents === 0);
     document.getElementById('totalSummary').textContent = format(totalCents / 100);
+}
+function updateTaxHints() {
+    [...lines.querySelectorAll('.invoice-line')].forEach(line => {
+        const select = line.querySelector('.line-taxable');
+        const hint = line.querySelector('.line-tax-hint');
+        if (select && hint) {
+            hint.classList.toggle('hidden', select.value !== 'false');
+        }
+    });
 }
 function renumber() {
     [...lines.querySelectorAll('.invoice-line')].forEach((line, index) => {
-        line.querySelectorAll('input, textarea').forEach(input => {
+        line.querySelectorAll('input, textarea, select').forEach(input => {
             input.name = input.name.replace(/^lines\[\d+\]\./, `lines[${index}].`);
             input.id = input.id.replace(/^lines\d+\./, `lines${index}.`);
         });
@@ -370,7 +394,8 @@ function renumber() {
 }
 document.getElementById('addLine').addEventListener('click', () => {
     const index = lines.querySelectorAll('.invoice-line').length;
-    lines.insertAdjacentHTML('beforeend', `<div class="invoice-line grid gap-3 rounded-xl bg-[#f7f3ee] p-4 lg:grid-cols-[minmax(0,1fr)_120px_150px_42px]"><div><label class="label">Descripción o concepto</label><textarea name="lines[${index}].description" rows="2" class="field resize-y bg-white"></textarea></div><div><label class="label">Cantidad</label><input name="lines[${index}].quantity" type="number" min="0.01" step="0.01" value="1" class="line-quantity field bg-white"></div><div><label class="label">Precio unit. (€)</label><input name="lines[${index}].unitPrice" type="number" min="0" step="0.01" value="0" class="line-price field bg-white"></div><button type="button" class="remove-line mt-7 rounded-lg p-2 text-[#e44b7c]"><span class="material-symbols-outlined">delete</span></button></div>`);
+    lines.insertAdjacentHTML('beforeend', `<div class="invoice-line grid gap-3 rounded-xl bg-[#f7f3ee] p-4 lg:grid-cols-[minmax(0,1fr)_120px_150px_210px_42px]"><div><label class="label">Descripción o concepto</label><textarea name="lines[${index}].description" rows="2" class="field resize-y bg-white"></textarea></div><div><label class="label">Cantidad</label><input name="lines[${index}].quantity" type="number" min="0.01" step="0.01" value="1" class="line-quantity field bg-white"></div><div><label class="label">Precio unit. (€)</label><input name="lines[${index}].unitPrice" type="number" step="0.01" value="0" class="line-price field bg-white"></div><div><label class="label">Tratamiento fiscal</label><select name="lines[${index}].taxable" class="line-taxable field bg-white" data-indemnity-option="true"><option value="true" selected>En base imponible</option><option value="false">Indemnización / fuera de base</option></select><p class="line-tax-hint mt-2 hidden text-xs text-[#777]">Solo para indemnizaciones reales: excluidas de la base conforme al art. 78.Tres.1 de la Ley 37/1992.</p></div><button type="button" class="remove-line mt-7 rounded-lg p-2 text-[#e44b7c]"><span class="material-symbols-outlined">delete</span></button></div>`);
+    updateTaxHints();
     recalculate();
 });
 lines.addEventListener('input', recalculate);

@@ -1,11 +1,14 @@
 package com.mflogistica.web.controller;
 
 import com.mflogistica.application.service.FiscalDataService;
+import com.mflogistica.application.port.UserRepositoryPort;
 import com.mflogistica.domain.model.FiscalData;
+import com.mflogistica.infrastructure.config.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -20,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(FiscalDataController.class)
+@Import(SecurityConfig.class)
 class FiscalDataControllerTest {
 
     @Autowired
@@ -27,6 +31,9 @@ class FiscalDataControllerTest {
 
     @MockBean
     private FiscalDataService fiscalDataService;
+
+    @MockBean
+    private UserRepositoryPort userRepositoryPort;
 
     @Test
     void shouldRenderFiscalSettingsWithHistoricalSnapshotNoticeAndSharedMenu() throws Exception {

@@ -8,6 +8,7 @@ import com.mflogistica.application.port.PdfGeneratorPort;
 import com.mflogistica.application.port.ClientRepositoryPort;
 import com.mflogistica.domain.model.Client;
 import com.mflogistica.domain.model.Invoice;
+import com.mflogistica.domain.model.InvoiceSummary;
 import com.mflogistica.domain.model.InvoiceLine;
 import com.mflogistica.domain.model.FiscalData;
 import com.mflogistica.domain.exception.BusinessException;
@@ -53,6 +54,35 @@ class InvoiceServiceTest {
         assertEquals(new BigDecimal("-54.67"), response.totalRetentions());
         assertEquals(new BigDecimal("6560.58"), response.totalAmount());
         assertEquals("FAC-" + LocalDate.now().getYear() + "-0001", response.invoiceNumber());
+    }
+
+    @Test
+    void shouldKeepPenaltyOutsideTaxBaseAndCalculateTaxOnlyOnServices() {
+        InMemoryInvoiceRepository repo = new InMemoryInvoiceRepository();
+        InvoiceService service = service(repo, invoice -> "pdf".getBytes());
+        InvoiceRequestDto request = new InvoiceRequestDto(
+                "FAC-" + LocalDate.now().getYear() + "-NEGATIVE",
+                LocalDate.now(),
+                "Cliente Demo",
+                "B12345678",
+                "Calle Mayor 1",
+                List.of(
+                        new InvoiceLineRequestDto("TO_DOOR 1.2", new BigDecimal("5475"),
+                                new BigDecimal("1.20")),
+                        new InvoiceLineRequestDto("AA", new BigDecimal("173"), new BigDecimal("0.30")),
+                        new InvoiceLineRequestDto("PUDOS", new BigDecimal("163"), new BigDecimal("0.30")),
+                        new InvoiceLineRequestDto("Penalización 4*30", new BigDecimal("4"),
+                                new BigDecimal("-30.00"), false)
+                )
+        );
+
+        InvoiceResponseDto response = service.createInvoice(request);
+
+        assertEquals(new BigDecimal("6670.80"), response.subtotal());
+        assertEquals(new BigDecimal("1400.87"), response.taxAmount());
+        assertEquals(new BigDecimal("-66.71"), response.totalRetentions());
+        assertEquals(new BigDecimal("7884.96"), response.totalAmount());
+        assertEquals(false, service.findForEdit(response.id()).lines().getLast().taxable());
     }
 
     @Test
@@ -215,7 +245,7 @@ class InvoiceServiceTest {
                     invoice.totalAmount(),
                     invoice.lines().stream()
                             .map(line -> new InvoiceLine((long) (invoices.size() + 1), line.description(),
-                                    line.quantity(), line.unitPrice(), line.totalAmount()))
+                                    line.quantity(), line.unitPrice(), line.totalAmount(), line.taxable()))
                             .toList(),
                     invoice.issuerSnapshot()
             );
@@ -239,8 +269,8 @@ class InvoiceServiceTest {
         }
 
         @Override
-        public List<Invoice> findRecent(int limit) {
-            return invoices.stream().limit(limit).toList();
+        public List<InvoiceSummary> findRecent(int limit) {
+            return invoices.stream().limit(limit).map(InMemoryInvoiceRepository::toSummary).toList();
         }
 
         @Override
@@ -264,7 +294,15 @@ class InvoiceServiceTest {
 
         @Override
         public InvoiceSearchResultDto search(String term, LocalDate from, LocalDate to, int page, int size) {
-            return new InvoiceSearchResultDto(invoices, invoices.size());
+            return new InvoiceSearchResultDto(invoices.stream().map(InMemoryInvoiceRepository::toSummary).toList(),
+                    invoices.size());
+        }
+
+        private static InvoiceSummary toSummary(Invoice invoice) {
+            return new InvoiceSummary(invoice.id(), invoice.invoiceNumber(), invoice.clientName(), invoice.clientNif(),
+                    invoice.issueDate(), invoice.subtotal(), invoice.taxRate(), invoice.taxAmount(), invoice.irpfRate(),
+                    invoice.totalRetentions(), invoice.totalAmount(),
+                    invoice.lines().isEmpty() ? "" : invoice.lines().getFirst().description());
         }
 
     }
